@@ -288,7 +288,7 @@
                         tasks: [{ kelas: row[4], waktu: row[5], tugasan: row[7], guruGanti: row[8], status: status }]
                     };
                 } else {
-                    groupedData[key].periodsCount++;
+                    groupedData[key].periodsCount++; // Ini mengira jumlah blok kelas yang dihantar
                     if (status === "Pending") groupedData[key].isPending = true;
                     groupedData[key].tasks.push({ kelas: row[4], waktu: row[5], tugasan: row[7], guruGanti: row[8], status: status });
                 }
@@ -318,7 +318,7 @@
                     <div class="list-item">
                         <div class="list-item-main">
                             <h3>${record.nama} — <span style="font-weight:normal; color:var(--text-muted)">${record.subjek}</span></h3>
-                            <div class="list-item-sub" style="margin-top: 5px;"><span>${record.sebab}</span><span>📅 ${record.tarikh}</span><span>⏱ ${record.periodsCount} waktu kelas</span></div>
+                            <div class="list-item-sub" style="margin-top: 5px;"><span>${record.sebab}</span><span>📅 ${record.tarikh}</span><span>⏱ ${record.periodsCount} tugasan kelas</span></div>
                         </div>
                         <div class="list-actions">
                             <div style="display:flex; gap:10px; align-items:center;">
@@ -402,14 +402,23 @@
             .finally(() => { document.getElementById('btnSubmitTeacher').disabled = false; document.getElementById('loadingMsgTeacher').style.display = 'none'; });
         });
 
-        // --- RECORD ABSENCE FORM ---
+        // --- RECORD ABSENCE FORM (DIPERBAIKI) ---
         let taskCount = 0;
         function addPeriod() {
             taskCount++;
             const div = document.createElement('div'); div.className = 'task-block'; div.id = `task-${taskCount}`;
-            div.innerHTML = `<div style="font-size: 0.8rem; font-weight: 700; color: var(--primary); margin-bottom: 15px;">WAKTU KE-${taskCount}</div>
+            div.innerHTML = `<div style="font-size: 0.8rem; font-weight: 700; color: var(--primary); margin-bottom: 15px;">TUGASAN KELAS ${taskCount}</div>
                 ${taskCount > 1 ? `<button type="button" class="btn-remove" onclick="document.getElementById('task-${taskCount}').remove()">Padam</button>` : ''}
-                <div class="row"><div class="col form-group"><label>Kelas</label><input type="text" class="task-kelas" required placeholder="Cth: 4 Amanah"></div><div class="col form-group"><label>Waktu Ke-</label><input type="number" class="task-waktu" required placeholder="Cth: 1"></div></div>
+                <div class="row">
+                    <div class="col form-group">
+                        <label>Kelas</label>
+                        <input type="text" class="task-kelas" required placeholder="Cth: 4 Amanah">
+                    </div>
+                    <div class="col form-group">
+                        <label>Waktu Ke-</label>
+                        <input type="text" class="task-waktu" required placeholder="Cth: 2-4 atau 5,6">
+                    </div>
+                </div>
                 <div class="form-group"><label>Mata Pelajaran</label><input type="text" class="task-subjek" required placeholder="Cth: Sejarah"></div>
                 <div class="form-group"><label>Tugasan Murid (MMI)</label><textarea class="task-tugasan" required placeholder="Sila tuliskan latihan atau muka surat buku teks..."></textarea></div>`;
             document.getElementById('tasksContainer').appendChild(div);
