@@ -63,7 +63,7 @@
 
         /* Modal (Pop-up Form) */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 100; align-items: center; justify-content: center;}
-        .modal { background: white; width: 100%; max-width: 500px; border-radius: 8px; padding: 25px; }
+        .modal { background: white; width: 100%; max-width: 500px; border-radius: 8px; padding: 25px; max-height: 90vh; overflow-y: auto;}
         .modal-header { font-size: 1.2rem; font-weight: 600; margin-bottom: 15px; display: flex; justify-content: space-between;}
         .close-modal { cursor: pointer; color: var(--text-muted); font-size: 1.2rem; border: none; background: none;}
 
@@ -129,7 +129,7 @@
             <div id="teachers" class="page-section">
                 <div class="page-title">
                     <div><h1>Teachers</h1><p>Manage your school's teacher roster</p></div>
-                    <button class="btn btn-primary" onclick="openModal()">+ Add Teacher</button>
+                    <button class="btn btn-primary" onclick="openTeacherModal()">+ Add Teacher</button>
                 </div>
                 <div id="teachers-grid" class="teachers-grid">
                     <div class="loading-state">Mengambil senarai guru...</div>
@@ -180,7 +180,7 @@
         <div class="modal">
             <div class="modal-header">
                 <span>Add New Teacher</span>
-                <button class="close-modal" onclick="closeModal()">✖</button>
+                <button class="close-modal" onclick="closeTeacherModal()">✖</button>
             </div>
             <form id="addTeacherForm">
                 <div class="form-group"><label>Full Name</label><input type="text" id="t_name" required placeholder="e.g. Cik Nurul Ain"></div>
@@ -189,7 +189,7 @@
                 <div class="form-group"><label>Phone Number</label><input type="text" id="t_phone" required placeholder="012-3456789"></div>
                 
                 <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 25px;">
-                    <button type="button" class="btn" style="background: white; border: 1px solid var(--border);" onclick="closeModal()">Cancel</button>
+                    <button type="button" class="btn" style="background: white; border: 1px solid var(--border);" onclick="closeTeacherModal()">Cancel</button>
                     <button type="submit" class="btn btn-primary" id="btnSubmitTeacher">Save Teacher</button>
                 </div>
                 <div id="loadingMsgTeacher" class="submit-loading">Menyimpan data guru...</div>
@@ -197,9 +197,22 @@
         </div>
     </div>
 
+    <div class="modal-overlay" id="viewTaskModal">
+        <div class="modal" style="max-width: 600px;">
+            <div class="modal-header">
+                <span>Lihat Tugasan Kelas</span>
+                <button class="close-modal" onclick="closeTaskModal()">✖</button>
+            </div>
+            <div id="taskModalContent">
+                </div>
+        </div>
+    </div>
+
     <script>
         // MASUKKAN LINK WEB APP URL KAU DI SINI
         const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxZtfHwHiDluNCKyfYFbaG2kcJY2Xi831XxQ4OwoSNlB9HXePEj6xOjKAE3TG_jAHgy/exec"; 
+
+        let globalAbsenceData = {}; // Pembolehubah untuk simpan data tugasan sementara
 
         // --- NAVIGATION ---
         function navigateTo(pageId, navElement) {
@@ -210,8 +223,9 @@
         }
 
         // --- MODAL LOGIC ---
-        function openModal() { document.getElementById('teacherModal').style.display = 'flex'; }
-        function closeModal() { document.getElementById('teacherModal').style.display = 'none'; document.getElementById('addTeacherForm').reset(); }
+        function openTeacherModal() { document.getElementById('teacherModal').style.display = 'flex'; }
+        function closeTeacherModal() { document.getElementById('teacherModal').style.display = 'none'; document.getElementById('addTeacherForm').reset(); }
+        function closeTaskModal() { document.getElementById('viewTaskModal').style.display = 'none'; }
 
         document.getElementById('todayDate').innerText = new Date().toLocaleDateString('en-GB', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 
@@ -266,13 +280,21 @@
                 teachersSet.add(nama);
                 status === "Covered" ? covered++ : uncovered++;
 
+                // Struktur Data: Kumpul semua 'tasks' di bawah nama guru yang sama
                 if (!groupedData[key]) {
-                    groupedData[key] = { nama: nama, tarikh: tarikhFormatted, sebab: row[2], subjek: row[6], periodsCount: 1, isPending: (status === "Pending") };
+                    groupedData[key] = { 
+                        nama: nama, tarikh: tarikhFormatted, sebab: row[2], nota: row[3], subjek: row[6], 
+                        periodsCount: 1, isPending: (status === "Pending"),
+                        tasks: [{ kelas: row[4], waktu: row[5], tugasan: row[7], guruGanti: row[8], status: status }]
+                    };
                 } else {
                     groupedData[key].periodsCount++;
                     if (status === "Pending") groupedData[key].isPending = true;
+                    groupedData[key].tasks.push({ kelas: row[4], waktu: row[5], tugasan: row[7], guruGanti: row[8], status: status });
                 }
             });
+
+            globalAbsenceData = groupedData; // Simpan ke global variable untuk diakses modal
 
             document.getElementById('stat-absent').innerText = teachersSet.size;
             document.getElementById('stat-covered').innerText = covered;
@@ -286,8 +308,8 @@
                 recordsArray.forEach(record => {
                     let badgeClass = record.isPending ? 'badge-pending' : 'badge-covered';
                     let badgeText = record.isPending ? 'Pending' : 'Covered';
+                    let keyStr = record.tarikh + "_" + record.nama;
                     
-                    // Butang Mark Covered dinamik
                     let actionButton = record.isPending ? 
                         `<button class="btn btn-success" onclick="markAsCovered('${record.tarikh}', '${record.nama}')">✔ Mark Covered</button>` : 
                         `<span style="font-size: 0.8rem; color: var(--success); font-weight: 600;">✔ Selesai Ditugaskan</span>`;
@@ -299,7 +321,10 @@
                             <div class="list-item-sub" style="margin-top: 5px;"><span>${record.sebab}</span><span>📅 ${record.tarikh}</span><span>⏱ ${record.periodsCount} periods</span></div>
                         </div>
                         <div class="list-actions">
-                            <span class="badge ${badgeClass}">${badgeText}</span>
+                            <div style="display:flex; gap:10px; align-items:center;">
+                                <span class="badge ${badgeClass}">${badgeText}</span>
+                                <button class="btn" style="border:1px solid var(--border); background:white; padding:4px 8px; font-size:0.8rem;" onclick="viewTasks('${keyStr}')">👁️ Lihat Tugasan</button>
+                            </div>
                             ${actionButton}
                         </div>
                     </div>`;
@@ -307,6 +332,34 @@
             }
             document.getElementById('dashboard-list').innerHTML = listHTML;
             document.getElementById('absences-list').innerHTML = listHTML;
+        }
+
+        // --- FUNGSI PAPAR TUGASAN DALAM MODAL ---
+        function viewTasks(key) {
+            const data = globalAbsenceData[key];
+            let html = `
+                <div style="margin-bottom:20px; font-size:0.9rem;">
+                    <p style="margin-bottom:5px;"><strong>Guru Cuti:</strong> ${data.nama}</p>
+                    <p style="color:var(--text-muted);"><strong>Nota Tambahan:</strong> ${data.nota || 'Tiada nota tambahan.'}</p>
+                </div>
+                <div style="display:flex; flex-direction:column; gap:15px;">
+            `;
+
+            data.tasks.forEach(t => {
+                let statusBadge = t.status === "Pending" ? `<span class="badge badge-pending">Pending</span>` : `<span class="badge badge-covered">Covered by: ${t.guruGanti || 'Unknown'}</span>`;
+                html += `
+                <div style="background:var(--bg-light); border:1px solid var(--border); border-radius:6px; padding:15px;">
+                    <div style="display:flex; justify-content:space-between; margin-bottom:10px; align-items:center;">
+                        <span style="font-weight:700; color:var(--primary);">Waktu ${t.waktu} — Kelas ${t.kelas}</span>
+                        ${statusBadge}
+                    </div>
+                    <p style="font-size:0.85rem; color:var(--text-main); white-space: pre-wrap;"><strong>Tugasan:</strong><br>${t.tugasan}</p>
+                </div>`;
+            });
+
+            html += `</div>`;
+            document.getElementById('taskModalContent').innerHTML = html;
+            document.getElementById('viewTaskModal').style.display = 'flex';
         }
 
         // --- FUNGSI UPDATE STATUS (MARK COVERED) ---
@@ -352,7 +405,7 @@
 
             fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify(payload) })
             .then(res => res.json())
-            .then(data => { alert("Guru berjaya ditambah!"); closeModal(); loadDataFromSheets(); })
+            .then(data => { alert("Guru berjaya ditambah!"); closeTeacherModal(); loadDataFromSheets(); })
             .catch(err => alert("Ralat! Pastikan URL betul."))
             .finally(() => { document.getElementById('btnSubmitTeacher').disabled = false; document.getElementById('loadingMsgTeacher').style.display = 'none'; });
         });
