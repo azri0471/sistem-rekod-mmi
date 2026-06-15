@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>School Relief - Record Absence</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #0f172a; /* Warna sidebar dark blue */
+            --bg-light: #f8fafc;
+            --border: #e2e8f0;
+            --primary: #1e3a8a;
+            --primary-hover: #1e40af;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --accent: #f59e0b;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body { display: flex; background-color: var(--bg-light); height: 100vh; overflow: hidden; }
+
+        /* Sidebar Styles */
+        .sidebar { width: 250px; background-color: var(--bg-dark); color: white; display: flex; flex-direction: column; padding: 20px 0; }
+        .logo-container { display: flex; align-items: center; padding: 0 20px 30px; font-weight: 700; font-size: 1.2rem; color: var(--accent); }
+        .logo-icon { background: var(--accent); color: var(--bg-dark); border-radius: 4px; padding: 4px 8px; margin-right: 10px; }
+        
+        .nav-item { padding: 12px 20px; color: #cbd5e1; text-decoration: none; display: block; font-size: 0.9rem; margin-bottom: 5px; }
+        .nav-item:hover, .nav-item.active { background-color: rgba(255,255,255,0.1); color: white; border-left: 3px solid var(--accent); }
+        
+        .actions-label { font-size: 0.75rem; color: var(--text-muted); padding: 20px 20px 10px; font-weight: 600; letter-spacing: 1px; }
+        .btn-record-sidebar { margin: 0 20px; background: rgba(245, 158, 11, 0.1); border: 1px solid var(--accent); color: var(--accent); padding: 10px; border-radius: 6px; cursor: pointer; font-weight: 600; text-align: left; }
+
+        /* Main Content Styles */
+        .main-content { flex: 1; display: flex; flex-direction: column; overflow-y: auto; }
+        .header { background: white; padding: 15px 30px; border-bottom: 1px solid var(--border); display: flex; align-items: center; font-weight: 600; color: var(--text-main); }
+        
+        .content-area { padding: 30px; max-width: 900px; margin: 0 auto; width: 100%; }
+        .page-title h1 { font-size: 1.5rem; margin-bottom: 5px; color: var(--text-main); }
+        .page-title p { color: var(--text-muted); font-size: 0.9rem; margin-bottom: 30px; }
+
+        /* Card Form */
+        .card { background: white; border: 1px solid var(--border); border-radius: 8px; padding: 25px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+        .card-header { margin-bottom: 20px; }
+        .card-header h2 { font-size: 1.1rem; color: var(--text-main); }
+        .card-header p { font-size: 0.85rem; color: var(--text-muted); }
+
+        .form-group { margin-bottom: 15px; }
+        label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-main); margin-bottom: 6px; }
+        input, select, textarea { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 0.9rem; color: var(--text-main); outline: none; transition: border 0.3s; }
+        input:focus, select:focus, textarea:focus { border-color: var(--primary); }
+        textarea { resize: vertical; min-height: 80px; }
+
+        .row { display: flex; gap: 15px; }
+        .col { flex: 1; }
+
+        /* Relief Tasks Section */
+        .task-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .btn-add { background: white; border: 1px solid var(--border); color: var(--text-main); padding: 6px 12px; border-radius: 6px; font-size: 0.85rem; cursor: pointer; font-weight: 500; display: flex; align-items: center; gap: 5px;}
+        .btn-add:hover { background: var(--bg-light); }
+
+        .task-block { border: 1px solid var(--border); border-radius: 6px; padding: 20px; margin-bottom: 15px; background: var(--bg-light); position: relative; }
+        .task-block-title { font-size: 0.8rem; font-weight: 700; color: var(--primary); margin-bottom: 15px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .btn-remove { position: absolute; top: 15px; right: 15px; background: #fee2e2; border: none; color: #dc2626; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.75rem; font-weight: 600;}
+
+        .action-buttons { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; margin-bottom: 40px; }
+        .btn { padding: 10px 20px; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 0.9rem; border: none; }
+        .btn-cancel { background: white; border: 1px solid var(--border); color: var(--text-main); }
+        .btn-submit { background: var(--primary); color: white; }
+        .btn-submit:hover { background: var(--primary-hover); }
+        
+        #loadingMsg { display: none; text-align: right; color: var(--primary); font-size: 0.9rem; font-weight: 600; margin-top: 10px; }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar">
+        <div class="logo-container">
+            <span class="logo-icon">📅</span> School Relief
+        </div>
+        <a href="#" class="nav-item">Dashboard</a>
+        <a href="#" class="nav-item active">Absences</a>
+        <a href="#" class="nav-item">Teachers</a>
+        
+        <div class="actions-label">ACTIONS</div>
+        <button class="btn-record-sidebar">+ Record Absence</button>
+    </div>
+
+    <div class="main-content">
+        <div class="header">
+            <span style="color:var(--text-muted); margin-right:10px;">📄</span> Relief Teacher Management System
+        </div>
+        
+        <div class="content-area">
+            <div class="page-title">
+                <h1>Record Absence</h1>
+                <p>Submit absence and leave class work for relief teachers</p>
+            </div>
+
+            <form id="absenceForm">
+                <div class="card">
+                    <div class="card-header">
+                        <h2>Absence Details</h2>
+                        <p>Who is absent, when, and why?</p>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Teacher</label>
+                        <select id="namaGuru" required>
+                            <option value="">Select teacher...</option>
+                            <option value="Cik Nurul Ain binti Ahmad">Cik Nurul Ain binti Ahmad</option>
+                            <option value="En. Hafiz bin Zulkifli">En. Hafiz bin Zulkifli</option>
+                            <option value="Pn. Siti Hajar binti Malik">Pn. Siti Hajar binti Malik</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Date of Absence</label>
+                        <input type="date" id="tarikh" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Reason</label>
+                        <select id="sebab" required>
+                            <option value="">Select reason...</option>
+                            <option value="MC (Sakit)">MC (Sakit)</option>
+                            <option value="CRK (Cuti Rehat Khas)">CRK (Cuti Rehat Khas)</option>
+                            <option value="Kursus/Tugas Rasmi">Kursus/Tugas Rasmi</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Additional Notes (optional)</label>
+                        <textarea id="nota" placeholder="Any additional information for the coordinator..."></textarea>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="task-header">
+                        <div>
+                            <h2>Relief Tasks</h2>
+                            <p>Add one task per class period. List the work students need to do.</p>
+                        </div>
+                        <button type="button" class="btn-add" onclick="addPeriod()">+ Add Period</button>
+                    </div>
+
+                    <div id="tasksContainer">
+                        </div>
+                </div>
+
+                <div class="action-buttons">
+                    <button type="button" class="btn btn-cancel">Cancel</button>
+                    <button type="submit" class="btn btn-submit">Submit Absence</button>
+                </div>
+                <div id="loadingMsg">Menghantar data ke sistem... Sila tunggu.</div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // MASUKKAN LINK WEB APP URL DARI GOOGLE APPS SCRIPT DI SINI
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxZtfHwHiDluNCKyfYFbaG2kcJY2Xi831XxQ4OwoSNlB9HXePEj6xOjKAE3TG_jAHgy/exec"; 
+
+        let taskCount = 0;
+
+        // Fungsi untuk tambah borang waktu kelas (Macam dalam gambar)
+        function addPeriod() {
+            taskCount++;
+            const container = document.getElementById('tasksContainer');
+            const taskBlock = document.createElement('div');
+            taskBlock.className = 'task-block';
+            taskBlock.id = `task-${taskCount}`;
+            
+            taskBlock.innerHTML = `
+                <div class="task-block-title">PERIOD ${taskCount}</div>
+                ${taskCount > 1 ? `<button type="button" class="btn-remove" onclick="removePeriod('task-${taskCount}')">Remove</button>` : ''}
+                
+                <div class="row">
+                    <div class="col form-group">
+                        <label>Class</label>
+                        <input type="text" class="task-kelas" placeholder="e.g. 4 Amanah" required>
+                    </div>
+                    <div class="col form-group">
+                        <label>Period Number</label>
+                        <input type="number" class="task-waktu" placeholder="1" required>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Subject</label>
+                    <input type="text" class="task-subjek" placeholder="e.g. Matematik" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Task / Work for Students</label>
+                    <textarea class="task-tugasan" placeholder="Describe the work students must complete during this period..." required></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>Relief Teacher (optional)</label>
+                    <input type="text" class="task-guruganti" placeholder="Name of teacher covering this period">
+                </div>
+            `;
+            container.appendChild(taskBlock);
+        }
+
+        // Fungsi padam waktu
+        function removePeriod(id) {
+            document.getElementById(id).remove();
+        }
+
+        // Tambah satu period secara automatik bila page dibuka
+        window.onload = function() {
+            addPeriod();
+            // Set tarikh hari ini sebagai default
+            document.getElementById('tarikh').valueAsDate = new Date();
+        };
+
+        // Fungsi hantar data pukal
+        document.getElementById('absenceForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const btnSubmit = document.querySelector('.btn-submit');
+            const loadingMsg = document.getElementById('loadingMsg');
+            btnSubmit.disabled = true;
+            loadingMsg.style.display = 'block';
+
+            // Kumpul data utama
+            const payload = {
+                tarikh: document.getElementById('tarikh').value,
+                namaGuru: document.getElementById('namaGuru').value,
+                sebab: document.getElementById('sebab').value,
+                nota: document.getElementById('nota').value,
+                tasks: [] // Array untuk simpan senarai kelas
+            };
+
+            // Kumpul semua data dari blok waktu kelas
+            const taskBlocks = document.querySelectorAll('.task-block');
+            taskBlocks.forEach(block => {
+                payload.tasks.push({
+                    kelas: block.querySelector('.task-kelas').value,
+                    waktu: block.querySelector('.task-waktu').value,
+                    subjek: document.querySelector('.task-subjek').value,
+                    tugasan: block.querySelector('.task-tugasan').value,
+                    guruGanti: block.querySelector('.task-guruganti').value || "Belum Ditetapkan"
+                });
+            });
+
+            // Hantar ke Google Apps Script
+            fetch(WEB_APP_URL, {
+                method: 'POST',
+                body: JSON.stringify(payload)
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert("Berjaya! Ketidakhadiran dan kerja relief telah direkodkan ke sistem.");
+                document.getElementById('absenceForm').reset();
+                document.getElementById('tasksContainer').innerHTML = '';
+                taskCount = 0;
+                addPeriod(); // Reset form
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert("Ralat berlaku semasa menghantar data.");
+            })
+            .finally(() => {
+                btnSubmit.disabled = false;
+                loadingMsg.style.display = 'none';
+            });
+        });
+    </script>
+</body>
+</html>
