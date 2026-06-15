@@ -41,6 +41,7 @@
         .card { background: white; border: 1px solid var(--border); border-radius: 8px; padding: 25px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
         .btn { padding: 10px 20px; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 0.9rem; border: none; }
         .btn-primary { background: var(--primary); color: white; }
+        .btn-danger { background: #fee2e2; color: #dc2626; padding: 6px 12px; border-radius: 4px; border: none; cursor: pointer; font-size: 0.8rem; font-weight: 600;}
         .btn-success { background: var(--success); color: white; padding: 6px 12px; font-size: 0.8rem; border: none;}
         .badge { padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 600; }
         .badge-pending { background: #fee2e2; color: #dc2626; }
@@ -98,27 +99,33 @@
         <div class="content-area">
             <div id="dashboard" class="page-section active">
                 <div class="page-title">
-                    <div><h1>Ringkasan Hari Ini</h1><p id="todayDate">Memuatkan tarikh...</p></div>
+                    <div>
+                        <h1>Ringkasan Harian</h1>
+                        <p style="margin-top:5px; color:var(--text-main); font-weight:500;">
+                            Pilih Tarikh: 
+                            <input type="date" id="filterDate" style="padding:6px; border-radius:6px; border:1px solid var(--border); margin-left:10px; font-family:'Inter'; outline:none; max-width:150px;">
+                        </p>
+                    </div>
                     <button class="btn btn-primary" onclick="loadDataFromSheets()">🔄 Muat Semula Data</button>
                 </div>
                 <div class="stats-grid">
                     <div class="stat-card">
-                        <div class="stat-title">GURU BERCUTI HARI INI</div><div class="stat-value" id="stat-absent">-</div><div class="stat-desc">Telah dilaporkan</div>
+                        <div class="stat-title">GURU BERCUTI</div><div class="stat-value" id="stat-absent">-</div><div class="stat-desc">Bagi tarikh dipilih</div>
                     </div>
                     <div class="stat-card green">
-                        <div class="stat-title">WAKTU DIGANTI HARI INI</div><div class="stat-value" id="stat-covered">-</div><div class="stat-desc">Berjaya ditugaskan</div>
+                        <div class="stat-title">WAKTU DIGANTI</div><div class="stat-value" id="stat-covered">-</div><div class="stat-desc">Berjaya ditugaskan</div>
                     </div>
                     <div class="stat-card red">
-                        <div class="stat-title">BELUM DIGANTI HARI INI</div><div class="stat-value" id="stat-uncovered">-</div><div class="stat-desc" style="color:var(--danger)">Waktu perlukan guru ganti</div>
+                        <div class="stat-title">BELUM DIGANTI</div><div class="stat-value" id="stat-uncovered">-</div><div class="stat-desc" style="color:var(--danger)">Waktu perlukan guru ganti</div>
                     </div>
                 </div>
-                <h3 style="margin-bottom: 15px; margin-top: 30px;">Rekod Cuti Keseluruhan</h3>
+                <h3 style="margin-bottom: 15px; margin-top: 30px;">Rekod Cuti (Tarikh Dipilih)</h3>
                 <div id="dashboard-list"><div class="loading-state">Mengambil data dari pangkalan...</div></div>
             </div>
 
             <div id="absences" class="page-section">
                 <div class="page-title">
-                    <div><h1>Senarai Guru Cuti</h1><p>Semua rekod ketidakhadiran guru</p></div>
+                    <div><h1>Senarai Guru Cuti</h1><p>Semua rekod sejarah ketidakhadiran guru</p></div>
                     <button class="btn btn-primary" onclick="navigateTo('record', null)">+ Lapor Cuti/MMI</button>
                 </div>
                 <div id="absences-list"><div class="loading-state">Mengambil data dari pangkalan...</div></div>
@@ -199,7 +206,8 @@
         // MASUKKAN LINK WEB APP URL KAU DI SINI
         const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxZtfHwHiDluNCKyfYFbaG2kcJY2Xi831XxQ4OwoSNlB9HXePEj6xOjKAE3TG_jAHgy/exec"; 
 
-        let globalAbsenceData = {}; 
+        let globalAbsenceRows = []; // Untuk simpan data raw (baris)
+        let globalAbsenceData = {}; // Untuk simpan data modal
 
         function navigateTo(pageId, navElement) {
             document.querySelectorAll('.page-section').forEach(p => p.classList.remove('active'));
@@ -212,7 +220,25 @@
         function closeTeacherModal() { document.getElementById('teacherModal').style.display = 'none'; document.getElementById('addTeacherForm').reset(); }
         function closeTaskModal() { document.getElementById('viewTaskModal').style.display = 'none'; }
 
-        document.getElementById('todayDate').innerText = new Date().toLocaleDateString('ms-MY', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+        // Setup filter date hari ini
+        window.onload = function() {
+            let today = new Date();
+            let yyyy = today.getFullYear();
+            let mm = String(today.getMonth() + 1).padStart(2, '0');
+            let dd = String(today.getDate()).padStart(2, '0');
+            document.getElementById('filterDate').value = `${yyyy}-${mm}-${dd}`;
+            document.getElementById('tarikh').valueAsDate = today;
+            
+            addPeriod(); 
+            loadDataFromSheets();
+        };
+
+        // Dengar perubahan pada Tarikh Filter
+        document.getElementById('filterDate').addEventListener('change', function() {
+            if(globalAbsenceRows.length > 0) {
+                renderAbsenceData(); // Render semula Papan Pemuka bila tarikh ditukar
+            }
+        });
 
         function loadDataFromSheets() {
             document.getElementById('dashboard-list').innerHTML = '<div class="loading-state">Mengambil data...</div>';
@@ -223,7 +249,8 @@
             .then(res => res.json())
             .then(result => {
                 if(result.status === "success") {
-                    processAbsences(result.absences);
+                    globalAbsenceRows = result.absences; // Simpan untuk guna masa filter
+                    renderAbsenceData();
                     processTeachers(result.teachers);
                 }
             })
@@ -237,7 +264,15 @@
                 gridHTML = '<p style="color:var(--text-muted);">Belum ada guru direkodkan.</p>';
             } else {
                 teachers.forEach(t => {
-                    gridHTML += `<div class="card" style="padding: 20px; margin-bottom:0;"><h3 style="font-size: 1rem; margin-bottom: 5px;">${t[0]}</h3><span style="background:#f1f5f9; padding:2px 8px; font-size:0.75rem; border-radius:4px; margin-bottom:15px; display:inline-block;">${t[1]}</span><div style="font-size: 0.8rem; color: var(--text-muted); display:flex; flex-direction:column; gap:5px;"><span>✉️ ${t[2]}</span><span>📞 ${t[3]}</span></div></div>`;
+                    gridHTML += `
+                    <div class="card" style="padding: 20px; margin-bottom:0; position:relative;">
+                        <button onclick="deleteTeacher('${t[0]}')" class="btn-danger" style="position:absolute; top:15px; right:15px;" title="Padam Guru">🗑️ Padam</button>
+                        <h3 style="font-size: 1rem; margin-bottom: 5px; padding-right:60px;">${t[0]}</h3>
+                        <span style="background:#f1f5f9; padding:2px 8px; font-size:0.75rem; border-radius:4px; margin-bottom:15px; display:inline-block;">${t[1]}</span>
+                        <div style="font-size: 0.8rem; color: var(--text-muted); display:flex; flex-direction:column; gap:5px;">
+                            <span>✉️ ${t[2]}</span><span>📞 ${t[3]}</span>
+                        </div>
+                    </div>`;
                     dropdownHTML += `<option value="${t[0]}">${t[0]}</option>`;
                 });
             }
@@ -245,20 +280,41 @@
             document.getElementById('namaGuru').innerHTML = dropdownHTML;
         }
 
-        function processAbsences(rows) {
-            let groupedData = {}; 
-            let todayCovered = 0; let todayUncovered = 0; let todayTeachersSet = new Set();
-            let todayFormatted = new Date().toLocaleDateString('ms-MY');
+        function deleteTeacher(nama) {
+            if(!confirm(`Anda pasti mahu memadam profil guru: ${nama}?`)) return;
 
-            rows.forEach(row => {
+            document.getElementById('teachers-grid').innerHTML = '<div class="loading-state">Memadam data guru... Sila tunggu.</div>';
+
+            const payload = { action: "delete_teacher", nama: nama };
+
+            fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify(payload) })
+            .then(res => res.json())
+            .then(data => {
+                alert(`Profil ${nama} berjaya dipadam!`);
+                loadDataFromSheets();
+            })
+            .catch(err => alert("Ralat semasa memadam data."));
+        }
+
+        // FUNGSI RENDER CUTI (Berdasarkan Filter Tarikh)
+        function renderAbsenceData() {
+            let groupedData = {}; 
+            let statsCovered = 0; let statsUncovered = 0; let statsTeachersSet = new Set();
+            
+            // Formatkan tarikh dari input filter ke DD/MM/YYYY untuk padanan
+            let filterDateObj = new Date(document.getElementById('filterDate').value);
+            let filterFormatted = filterDateObj.toLocaleDateString('ms-MY');
+
+            globalAbsenceRows.forEach(row => {
                 let tarikhFormatted = new Date(row[0]).toLocaleDateString('ms-MY');
                 let nama = row[1]; let status = row[9] || "Pending";
-                let lampiranUrl = row[10] || ""; // Column K untuk URL
+                let lampiranUrl = row[10] || ""; 
                 let key = tarikhFormatted + "_" + nama;
 
-                if (tarikhFormatted === todayFormatted) {
-                    todayTeachersSet.add(nama);
-                    status === "Covered" ? todayCovered++ : todayUncovered++;
+                // Hanya kira statistik JIKA rekod ini sepadan dengan TARIKH DIPILIH
+                if (tarikhFormatted === filterFormatted) {
+                    statsTeachersSet.add(nama);
+                    status === "Covered" ? statsCovered++ : statsUncovered++;
                 }
 
                 if (!groupedData[key]) {
@@ -276,23 +332,42 @@
 
             globalAbsenceData = groupedData; 
 
-            document.getElementById('stat-absent').innerText = todayTeachersSet.size;
-            document.getElementById('stat-covered').innerText = todayCovered;
-            document.getElementById('stat-uncovered').innerText = todayUncovered;
+            // Update Statistik Dashboard
+            document.getElementById('stat-absent').innerText = statsTeachersSet.size;
+            document.getElementById('stat-covered').innerText = statsCovered;
+            document.getElementById('stat-uncovered').innerText = statsUncovered;
 
-            let listHTML = ''; let recordsArray = Object.values(groupedData).reverse();
-            if(recordsArray.length === 0) { listHTML = '<p style="color:var(--text-muted)">Tiada rekod cuti setakat ini.</p>'; } 
-            else {
+            let dashboardListHTML = ''; let absencesListHTML = ''; 
+            let recordsArray = Object.values(groupedData).reverse();
+            let dashboardCount = 0;
+
+            if(recordsArray.length === 0) { 
+                dashboardListHTML = absencesListHTML = '<p style="color:var(--text-muted)">Tiada rekod cuti setakat ini.</p>'; 
+            } else {
                 recordsArray.forEach(record => {
                     let badgeClass = record.isPending ? 'badge-pending' : 'badge-covered';
                     let badgeText = record.isPending ? 'Belum Diganti Sepenuhnya' : 'Semua Selesai Diganti';
                     let keyStr = record.tarikh + "_" + record.nama;
 
-                    listHTML += `<div class="list-item"><div class="list-item-main"><h3>${record.nama} — <span style="font-weight:normal; color:var(--text-muted)">${record.subjek}</span></h3><div class="list-item-sub" style="margin-top: 5px;"><span>${record.sebab}</span><span>📅 ${record.tarikh}</span><span>⏱ ${record.periodsCount} tugasan kelas</span></div></div><div class="list-actions"><span class="badge ${badgeClass}" style="margin-bottom:5px;">${badgeText}</span><button class="btn" style="border:1px solid var(--primary); background:white; color:var(--primary); padding:6px 12px; font-size:0.8rem;" onclick="viewTasks('${keyStr}')">👁️ Urus / Lihat Tugasan</button></div></div>`;
+                    let cardHTML = `<div class="list-item"><div class="list-item-main"><h3>${record.nama} — <span style="font-weight:normal; color:var(--text-muted)">${record.subjek}</span></h3><div class="list-item-sub" style="margin-top: 5px;"><span>${record.sebab}</span><span>📅 ${record.tarikh}</span><span>⏱ ${record.periodsCount} tugasan kelas</span></div></div><div class="list-actions"><span class="badge ${badgeClass}" style="margin-bottom:5px;">${badgeText}</span><button class="btn" style="border:1px solid var(--primary); background:white; color:var(--primary); padding:6px 12px; font-size:0.8rem;" onclick="viewTasks('${keyStr}')">👁️ Urus / Lihat Tugasan</button></div></div>`;
+                    
+                    // Semua masuk di tab "Rekod Cuti"
+                    absencesListHTML += cardHTML;
+
+                    // HANYA MASUK DASHBOARD JIKA SAMA DENGAN TARIKH FILTER
+                    if (record.tarikh === filterFormatted) {
+                        dashboardListHTML += cardHTML;
+                        dashboardCount++;
+                    }
                 });
+
+                if (dashboardCount === 0) {
+                    dashboardListHTML = '<p style="color:var(--text-muted)">Tiada guru direkodkan bercuti pada tarikh ini.</p>';
+                }
             }
-            document.getElementById('dashboard-list').innerHTML = listHTML;
-            document.getElementById('absences-list').innerHTML = listHTML;
+            
+            document.getElementById('dashboard-list').innerHTML = dashboardListHTML;
+            document.getElementById('absences-list').innerHTML = absencesListHTML;
         }
 
         // --- FUNGSI PAPAR TUGASAN & LAMPIRAN ---
@@ -305,7 +380,6 @@
                     `<button class="btn btn-success" onclick="markAsCovered('${data.tarikh}', '${data.nama}', '${t.waktu}', '${t.kelas}')">➕ Tetap Guru Ganti</button>` : 
                     `<span class="badge badge-covered" style="font-size:0.85rem;">Diganti oleh: ${t.guruGanti || 'Tidak Dinamakan'}</span>`;
                 
-                // Cek jika ada lampiran
                 let lampiranBtn = t.lampiran ? `<br><a href="${t.lampiran}" target="_blank" class="btn-link">📎 Lihat Lampiran</a>` : '';
 
                 html += `<div style="background:var(--bg-light); border:1px solid var(--border); border-radius:6px; padding:15px;"><div style="display:flex; justify-content:space-between; margin-bottom:15px; align-items:center;"><span style="font-weight:700; color:var(--primary); font-size: 1.05rem;">Waktu ${t.waktu} — Kelas ${t.kelas}</span>${statusAndAction}</div><p style="font-size:0.85rem; color:var(--text-main); white-space: pre-wrap;"><strong>Tugasan / Arahan:</strong><br>${t.tugasan}</p>${lampiranBtn}</div>`;
@@ -354,7 +428,6 @@
                 </div>
                 <div class="form-group"><label>Mata Pelajaran</label><input type="text" class="task-subjek" required placeholder="Cth: Sejarah"></div>
                 <div class="form-group"><label>Tugasan Murid (MMI)</label><textarea class="task-tugasan" required placeholder="Sila tuliskan arahan..."></textarea></div>
-                
                 <div class="form-group" style="background:#e0e7ff; padding:10px; border-radius:6px; border:1px dashed #a5b4fc;">
                     <label style="color:#3730a3;">📎 Lampiran Fail / Gambar (Pilihan)</label>
                     <input type="file" class="task-file" accept="image/*,.pdf" style="font-size:0.8rem;">
@@ -363,12 +436,11 @@
             document.getElementById('tasksContainer').appendChild(div);
         }
 
-        // Fungsi tukar fail kepada Base64
         function getBase64(file) {
             return new Promise((resolve, reject) => {
                 const reader = new FileReader();
                 reader.readAsDataURL(file);
-                reader.onload = () => resolve(reader.result.split(',')[1]); // Buang header data:image/png;base64,
+                reader.onload = () => resolve(reader.result.split(',')[1]); 
                 reader.onerror = error => reject(error);
             });
         }
@@ -389,18 +461,17 @@
 
             const blocks = document.querySelectorAll('.task-block');
             
-            // Loop untuk proses data dan fail dari setiap blok
             for (let block of blocks) {
                 let fileInput = block.querySelector('.task-file');
                 let fileData = null; let fileName = null; let fileMimeType = null;
 
                 if (fileInput.files.length > 0) {
                     let file = fileInput.files[0];
-                    if(file.size > 5 * 1024 * 1024) { // Peringatan 5MB Limit
+                    if(file.size > 5 * 1024 * 1024) { 
                         alert("Ralat: Saiz fail " + file.name + " terlalu besar! Sila pastikan ia di bawah 5MB.");
                         document.getElementById('btnSubmitAbsence').disabled = false;
                         document.getElementById('loadingMsgAbsence').style.display = 'none';
-                        return; // Berhenti hantar
+                        return; 
                     }
                     fileData = await getBase64(file);
                     fileName = file.name;
@@ -413,9 +484,9 @@
                     subjek: block.querySelector('.task-subjek').value, 
                     tugasan: block.querySelector('.task-tugasan').value, 
                     guruGanti: "Belum Ditetapkan",
-                    fileData: fileData,         // Data Fail 
-                    fileName: fileName,         // Nama Fail
-                    fileMimeType: fileMimeType  // Format Fail (cth: application/pdf)
+                    fileData: fileData,         
+                    fileName: fileName,         
+                    fileMimeType: fileMimeType  
                 });
             }
 
@@ -430,11 +501,6 @@
             .catch(err => alert("Ralat semasa menghantar. Semak pautan URL anda."))
             .finally(() => { document.getElementById('btnSubmitAbsence').disabled = false; document.getElementById('loadingMsgAbsence').style.display = 'none'; });
         });
-
-        window.onload = function() {
-            addPeriod(); document.getElementById('tarikh').valueAsDate = new Date();
-            loadDataFromSheets();
-        };
     </script>
 </body>
 </html>
