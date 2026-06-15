@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>School Relief Management System</title>
+    <title>Sistem Rekod MMI</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -83,53 +83,53 @@
 
     <div class="sidebar">
         <div class="logo-container">
-            <span class="logo-icon">📅</span> School Relief
+            <span class="logo-icon">📅</span> SISTEM MMI
         </div>
-        <div class="nav-item active" onclick="navigateTo('dashboard', this)">Dashboard</div>
-        <div class="nav-item" onclick="navigateTo('absences', this)">Absences</div>
-        <div class="nav-item" onclick="navigateTo('teachers', this)">Teachers</div>
+        <div class="nav-item active" onclick="navigateTo('dashboard', this)">Papan Pemuka</div>
+        <div class="nav-item" onclick="navigateTo('absences', this)">Rekod Cuti</div>
+        <div class="nav-item" onclick="navigateTo('teachers', this)">Senarai Guru</div>
         
-        <div class="actions-label">ACTIONS</div>
-        <button class="btn-record-sidebar" onclick="navigateTo('record', null)">+ Record Absence</button>
+        <div class="actions-label">TINDAKAN</div>
+        <button class="btn-record-sidebar" onclick="navigateTo('record', null)">+ Lapor Cuti/MMI</button>
     </div>
 
     <div class="main-content">
-        <div class="header">📄 Relief Teacher Management System</div>
+        <div class="header">📄 Sistem Melindungi Masa Instruksional (MMI)</div>
         
         <div class="content-area">
             
             <div id="dashboard" class="page-section active">
                 <div class="page-title">
-                    <div><h1>Today's Overview</h1><p id="todayDate">Loading date...</p></div>
-                    <button class="btn btn-primary" onclick="loadDataFromSheets()">🔄 Refresh Data</button>
+                    <div><h1>Ringkasan Hari Ini</h1><p id="todayDate">Memuatkan tarikh...</p></div>
+                    <button class="btn btn-primary" onclick="loadDataFromSheets()">🔄 Muat Semula Data</button>
                 </div>
                 <div class="stats-grid">
                     <div class="stat-card">
-                        <div class="stat-title">TEACHERS ABSENT</div><div class="stat-value" id="stat-absent">-</div><div class="stat-desc">Reported in system</div>
+                        <div class="stat-title">GURU BERCUTI</div><div class="stat-value" id="stat-absent">-</div><div class="stat-desc">Telah dilaporkan</div>
                     </div>
                     <div class="stat-card green">
-                        <div class="stat-title">PERIODS COVERED</div><div class="stat-value" id="stat-covered">-</div><div class="stat-desc">Successfully assigned</div>
+                        <div class="stat-title">WAKTU DIGANTI</div><div class="stat-value" id="stat-covered">-</div><div class="stat-desc">Berjaya ditugaskan</div>
                     </div>
                     <div class="stat-card red">
-                        <div class="stat-title">UNCOVERED</div><div class="stat-value" id="stat-uncovered">-</div><div class="stat-desc" style="color:var(--danger)">Periods need attention</div>
+                        <div class="stat-title">BELUM DIGANTI</div><div class="stat-value" id="stat-uncovered">-</div><div class="stat-desc" style="color:var(--danger)">Waktu perlukan guru ganti</div>
                     </div>
                 </div>
-                <h3 style="margin-bottom: 15px; margin-top: 30px;">Recent Absences</h3>
-                <div id="dashboard-list"><div class="loading-state">Mengambil data dari server...</div></div>
+                <h3 style="margin-bottom: 15px; margin-top: 30px;">Rekod Cuti Terkini</h3>
+                <div id="dashboard-list"><div class="loading-state">Mengambil data dari pangkalan...</div></div>
             </div>
 
             <div id="absences" class="page-section">
                 <div class="page-title">
-                    <div><h1>Absences Roster</h1><p>All recorded teacher absences</p></div>
-                    <button class="btn btn-primary" onclick="navigateTo('record', null)">+ Record Absence</button>
+                    <div><h1>Senarai Guru Cuti</h1><p>Semua rekod ketidakhadiran guru</p></div>
+                    <button class="btn btn-primary" onclick="navigateTo('record', null)">+ Lapor Cuti/MMI</button>
                 </div>
-                <div id="absences-list"><div class="loading-state">Mengambil data dari server...</div></div>
+                <div id="absences-list"><div class="loading-state">Mengambil data dari pangkalan...</div></div>
             </div>
 
             <div id="teachers" class="page-section">
                 <div class="page-title">
-                    <div><h1>Teachers</h1><p>Manage your school's teacher roster</p></div>
-                    <button class="btn btn-primary" onclick="openTeacherModal()">+ Add Teacher</button>
+                    <div><h1>Senarai Guru</h1><p>Urus senarai profil guru sekolah anda</p></div>
+                    <button class="btn btn-primary" onclick="openTeacherModal()">+ Tambah Guru</button>
                 </div>
                 <div id="teachers-grid" class="teachers-grid">
                     <div class="loading-state">Mengambil senarai guru...</div>
@@ -137,39 +137,40 @@
             </div>
 
             <div id="record" class="page-section">
-                <div class="page-title"><div><h1>Record Absence</h1><p>Submit absence and leave class work</p></div></div>
+                <div class="page-title"><div><h1>Lapor Ketidakhadiran (MMI)</h1><p>Hantar maklumat cuti dan tinggalkan tugasan kelas</p></div></div>
                 <form id="absenceForm">
                     <div class="card">
-                        <h2 style="font-size: 1.1rem; margin-bottom: 5px;">Absence Details</h2>
+                        <h2 style="font-size: 1.1rem; margin-bottom: 5px;">Butiran Cuti</h2>
                         <div class="form-group" style="margin-top:15px;">
-                            <label>Teacher Name</label>
+                            <label>Nama Guru</label>
                             <select id="namaGuru" required>
-                                <option value="">Loading teachers...</option>
+                                <option value="">Memuatkan senarai guru...</option>
                             </select>
                         </div>
-                        <div class="form-group"><label>Date of Absence</label><input type="date" id="tarikh" required></div>
+                        <div class="form-group"><label>Tarikh Cuti</label><input type="date" id="tarikh" required></div>
                         <div class="form-group">
-                            <label>Reason</label>
+                            <label>Sebab / Kategori</label>
                             <select id="sebab" required>
                                 <option value="MC (Sakit)">MC (Sakit)</option>
                                 <option value="CRK (Cuti Rehat Khas)">CRK (Cuti Rehat Khas)</option>
                                 <option value="Kursus/Tugas Rasmi">Kursus/Tugas Rasmi</option>
+                                <option value="Lain-lain">Lain-lain</option>
                             </select>
                         </div>
-                        <div class="form-group"><label>Additional Notes</label><textarea id="nota" placeholder="Any additional information..."></textarea></div>
+                        <div class="form-group"><label>Nota Tambahan (Pilihan)</label><textarea id="nota" placeholder="Sebarang maklumat tambahan untuk admin..."></textarea></div>
                     </div>
                     <div class="card">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                            <h2 style="font-size: 1.1rem;">Relief Tasks</h2>
-                            <button type="button" class="btn" style="border:1px solid var(--border); background:white;" onclick="addPeriod()">+ Add Period</button>
+                            <h2 style="font-size: 1.1rem;">Tugasan Kelas (MMI)</h2>
+                            <button type="button" class="btn" style="border:1px solid var(--border); background:white;" onclick="addPeriod()">+ Tambah Waktu</button>
                         </div>
                         <div id="tasksContainer"></div>
                     </div>
                     <div style="display: flex; justify-content: flex-end; gap: 10px; margin-bottom: 40px;">
-                        <button type="button" class="btn" style="background: white; border: 1px solid var(--border);" onclick="navigateTo('dashboard', document.querySelectorAll('.nav-item')[0])">Cancel</button>
-                        <button type="submit" class="btn btn-primary" id="btnSubmitAbsence">Submit Absence</button>
+                        <button type="button" class="btn" style="background: white; border: 1px solid var(--border);" onclick="navigateTo('dashboard', document.querySelectorAll('.nav-item')[0])">Batal</button>
+                        <button type="submit" class="btn btn-primary" id="btnSubmitAbsence">Hantar Rekod</button>
                     </div>
-                    <div id="loadingMsgAbsence" class="submit-loading">Menghantar data...</div>
+                    <div id="loadingMsgAbsence" class="submit-loading">Menghantar data ke sistem...</div>
                 </form>
             </div>
 
@@ -179,18 +180,18 @@
     <div class="modal-overlay" id="teacherModal">
         <div class="modal">
             <div class="modal-header">
-                <span>Add New Teacher</span>
+                <span>Tambah Guru Baharu</span>
                 <button class="close-modal" onclick="closeTeacherModal()">✖</button>
             </div>
             <form id="addTeacherForm">
-                <div class="form-group"><label>Full Name</label><input type="text" id="t_name" required placeholder="e.g. Cik Nurul Ain"></div>
-                <div class="form-group"><label>Subject / Department</label><input type="text" id="t_subject" required placeholder="e.g. Matematik"></div>
-                <div class="form-group"><label>Email</label><input type="email" id="t_email" required placeholder="email@sekolah.edu.my"></div>
-                <div class="form-group"><label>Phone Number</label><input type="text" id="t_phone" required placeholder="012-3456789"></div>
+                <div class="form-group"><label>Nama Penuh</label><input type="text" id="t_name" required placeholder="Cth: Cik Nurul Ain"></div>
+                <div class="form-group"><label>Mata Pelajaran / Bidang</label><input type="text" id="t_subject" required placeholder="Cth: Matematik"></div>
+                <div class="form-group"><label>E-mel</label><input type="email" id="t_email" required placeholder="email@sekolah.edu.my"></div>
+                <div class="form-group"><label>Nombor Telefon</label><input type="text" id="t_phone" required placeholder="012-3456789"></div>
                 
                 <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 25px;">
-                    <button type="button" class="btn" style="background: white; border: 1px solid var(--border);" onclick="closeTeacherModal()">Cancel</button>
-                    <button type="submit" class="btn btn-primary" id="btnSubmitTeacher">Save Teacher</button>
+                    <button type="button" class="btn" style="background: white; border: 1px solid var(--border);" onclick="closeTeacherModal()">Batal</button>
+                    <button type="submit" class="btn btn-primary" id="btnSubmitTeacher">Simpan Profil Guru</button>
                 </div>
                 <div id="loadingMsgTeacher" class="submit-loading">Menyimpan data guru...</div>
             </form>
@@ -212,7 +213,7 @@
         // MASUKKAN LINK WEB APP URL KAU DI SINI
         const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxZtfHwHiDluNCKyfYFbaG2kcJY2Xi831XxQ4OwoSNlB9HXePEj6xOjKAE3TG_jAHgy/exec"; 
 
-        let globalAbsenceData = {}; // Pembolehubah untuk simpan data tugasan sementara
+        let globalAbsenceData = {}; 
 
         // --- NAVIGATION ---
         function navigateTo(pageId, navElement) {
@@ -227,9 +228,9 @@
         function closeTeacherModal() { document.getElementById('teacherModal').style.display = 'none'; document.getElementById('addTeacherForm').reset(); }
         function closeTaskModal() { document.getElementById('viewTaskModal').style.display = 'none'; }
 
-        document.getElementById('todayDate').innerText = new Date().toLocaleDateString('en-GB', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+        document.getElementById('todayDate').innerText = new Date().toLocaleDateString('ms-MY', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 
-        // --- FETCH DATA (TEACHERS & ABSENCES) ---
+        // --- FETCH DATA ---
         function loadDataFromSheets() {
             document.getElementById('dashboard-list').innerHTML = '<div class="loading-state">Mengambil data...</div>';
             document.getElementById('absences-list').innerHTML = '<div class="loading-state">Mengambil data...</div>';
@@ -243,15 +244,15 @@
                     processTeachers(result.teachers);
                 }
             })
-            .catch(error => alert("Gagal menyambung ke server. Semak URL."));
+            .catch(error => alert("Gagal menyambung ke pangkalan data. Semak pautan URL anda."));
         }
 
         function processTeachers(teachers) {
             let gridHTML = '';
-            let dropdownHTML = '<option value="">Select teacher...</option>';
+            let dropdownHTML = '<option value="">Pilih guru...</option>';
             
             if (teachers.length === 0) {
-                gridHTML = '<p style="color:var(--text-muted);">Belum ada guru direkodkan.</p>';
+                gridHTML = '<p style="color:var(--text-muted);">Belum ada guru direkodkan di dalam sistem.</p>';
             } else {
                 teachers.forEach(t => {
                     gridHTML += `
@@ -273,14 +274,13 @@
             let groupedData = {}; let covered = 0; let uncovered = 0; let teachersSet = new Set();
             
             rows.forEach(row => {
-                let tarikhFormatted = new Date(row[0]).toLocaleDateString('en-GB');
+                let tarikhFormatted = new Date(row[0]).toLocaleDateString('ms-MY');
                 let nama = row[1]; let status = row[9] || "Pending";
                 let key = tarikhFormatted + "_" + nama;
 
                 teachersSet.add(nama);
                 status === "Covered" ? covered++ : uncovered++;
 
-                // Struktur Data: Kumpul semua 'tasks' di bawah nama guru yang sama
                 if (!groupedData[key]) {
                     groupedData[key] = { 
                         nama: nama, tarikh: tarikhFormatted, sebab: row[2], nota: row[3], subjek: row[6], 
@@ -294,7 +294,7 @@
                 }
             });
 
-            globalAbsenceData = groupedData; // Simpan ke global variable untuk diakses modal
+            globalAbsenceData = groupedData; 
 
             document.getElementById('stat-absent').innerText = teachersSet.size;
             document.getElementById('stat-covered').innerText = covered;
@@ -303,22 +303,22 @@
             let listHTML = '';
             let recordsArray = Object.values(groupedData).reverse();
             
-            if(recordsArray.length === 0) { listHTML = '<p style="color:var(--text-muted)">Tiada rekod setakat ini.</p>'; } 
+            if(recordsArray.length === 0) { listHTML = '<p style="color:var(--text-muted)">Tiada rekod cuti setakat ini.</p>'; } 
             else {
                 recordsArray.forEach(record => {
                     let badgeClass = record.isPending ? 'badge-pending' : 'badge-covered';
-                    let badgeText = record.isPending ? 'Pending' : 'Covered';
+                    let badgeText = record.isPending ? 'Belum Diganti' : 'Selesai Diganti';
                     let keyStr = record.tarikh + "_" + record.nama;
                     
                     let actionButton = record.isPending ? 
-                        `<button class="btn btn-success" onclick="markAsCovered('${record.tarikh}', '${record.nama}')">✔ Mark Covered</button>` : 
-                        `<span style="font-size: 0.8rem; color: var(--success); font-weight: 600;">✔ Selesai Ditugaskan</span>`;
+                        `<button class="btn btn-success" onclick="markAsCovered('${record.tarikh}', '${record.nama}')">✔ Tandakan Selesai</button>` : 
+                        `<span style="font-size: 0.8rem; color: var(--success); font-weight: 600;">✔ Semua Waktu Telah Diganti</span>`;
 
                     listHTML += `
                     <div class="list-item">
                         <div class="list-item-main">
                             <h3>${record.nama} — <span style="font-weight:normal; color:var(--text-muted)">${record.subjek}</span></h3>
-                            <div class="list-item-sub" style="margin-top: 5px;"><span>${record.sebab}</span><span>📅 ${record.tarikh}</span><span>⏱ ${record.periodsCount} periods</span></div>
+                            <div class="list-item-sub" style="margin-top: 5px;"><span>${record.sebab}</span><span>📅 ${record.tarikh}</span><span>⏱ ${record.periodsCount} waktu kelas</span></div>
                         </div>
                         <div class="list-actions">
                             <div style="display:flex; gap:10px; align-items:center;">
@@ -346,14 +346,14 @@
             `;
 
             data.tasks.forEach(t => {
-                let statusBadge = t.status === "Pending" ? `<span class="badge badge-pending">Pending</span>` : `<span class="badge badge-covered">Covered by: ${t.guruGanti || 'Unknown'}</span>`;
+                let statusBadge = t.status === "Pending" ? `<span class="badge badge-pending">Belum Diganti</span>` : `<span class="badge badge-covered">Diganti oleh: ${t.guruGanti || 'Tidak Dinamakan'}</span>`;
                 html += `
                 <div style="background:var(--bg-light); border:1px solid var(--border); border-radius:6px; padding:15px;">
                     <div style="display:flex; justify-content:space-between; margin-bottom:10px; align-items:center;">
                         <span style="font-weight:700; color:var(--primary);">Waktu ${t.waktu} — Kelas ${t.kelas}</span>
                         ${statusBadge}
                     </div>
-                    <p style="font-size:0.85rem; color:var(--text-main); white-space: pre-wrap;"><strong>Tugasan:</strong><br>${t.tugasan}</p>
+                    <p style="font-size:0.85rem; color:var(--text-main); white-space: pre-wrap;"><strong>Tugasan / Arahan:</strong><br>${t.tugasan}</p>
                 </div>`;
             });
 
@@ -362,29 +362,21 @@
             document.getElementById('viewTaskModal').style.display = 'flex';
         }
 
-        // --- FUNGSI UPDATE STATUS (MARK COVERED) ---
+        // --- FUNGSI UPDATE STATUS ---
         function markAsCovered(tarikh, nama) {
             let guruGanti = prompt(`Masukkan nama Guru Ganti untuk kelas ${nama} (Biar kosong jika tak pasti):`, "");
-            if (guruGanti === null) return; // Batal jika tekan Cancel
+            if (guruGanti === null) return; 
 
             document.getElementById('dashboard-list').innerHTML = '<div class="loading-state">Mengemas kini status... Sila tunggu.</div>';
             document.getElementById('absences-list').innerHTML = '<div class="loading-state">Mengemas kini status... Sila tunggu.</div>';
 
-            const payload = {
-                action: "mark_covered",
-                tarikh: tarikh,
-                nama: nama,
-                guruGanti: guruGanti
-            };
+            const payload = { action: "mark_covered", tarikh: tarikh, nama: nama, guruGanti: guruGanti };
 
-            fetch(WEB_APP_URL, {
-                method: 'POST',
-                body: JSON.stringify(payload)
-            })
+            fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify(payload) })
             .then(res => res.json())
             .then(data => {
-                alert("Status berjaya ditukar kepada Covered!");
-                loadDataFromSheets(); // Refresh senarai lepas update
+                alert("Status berjaya ditukar kepada Selesai Diganti!");
+                loadDataFromSheets(); 
             })
             .catch(err => alert("Ralat semasa mengemas kini status."));
         }
@@ -405,7 +397,7 @@
 
             fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify(payload) })
             .then(res => res.json())
-            .then(data => { alert("Guru berjaya ditambah!"); closeTeacherModal(); loadDataFromSheets(); })
+            .then(data => { alert("Profil guru berjaya ditambah!"); closeTeacherModal(); loadDataFromSheets(); })
             .catch(err => alert("Ralat! Pastikan URL betul."))
             .finally(() => { document.getElementById('btnSubmitTeacher').disabled = false; document.getElementById('loadingMsgTeacher').style.display = 'none'; });
         });
@@ -415,11 +407,11 @@
         function addPeriod() {
             taskCount++;
             const div = document.createElement('div'); div.className = 'task-block'; div.id = `task-${taskCount}`;
-            div.innerHTML = `<div style="font-size: 0.8rem; font-weight: 700; color: var(--primary); margin-bottom: 15px;">PERIOD ${taskCount}</div>
-                ${taskCount > 1 ? `<button type="button" class="btn-remove" onclick="document.getElementById('task-${taskCount}').remove()">Remove</button>` : ''}
-                <div class="row"><div class="col form-group"><label>Class</label><input type="text" class="task-kelas" required></div><div class="col form-group"><label>Period Number</label><input type="number" class="task-waktu" required></div></div>
-                <div class="form-group"><label>Subject</label><input type="text" class="task-subjek" required></div>
-                <div class="form-group"><label>Task for Students</label><textarea class="task-tugasan" required></textarea></div>`;
+            div.innerHTML = `<div style="font-size: 0.8rem; font-weight: 700; color: var(--primary); margin-bottom: 15px;">WAKTU KE-${taskCount}</div>
+                ${taskCount > 1 ? `<button type="button" class="btn-remove" onclick="document.getElementById('task-${taskCount}').remove()">Padam</button>` : ''}
+                <div class="row"><div class="col form-group"><label>Kelas</label><input type="text" class="task-kelas" required placeholder="Cth: 4 Amanah"></div><div class="col form-group"><label>Waktu Ke-</label><input type="number" class="task-waktu" required placeholder="Cth: 1"></div></div>
+                <div class="form-group"><label>Mata Pelajaran</label><input type="text" class="task-subjek" required placeholder="Cth: Sejarah"></div>
+                <div class="form-group"><label>Tugasan Murid (MMI)</label><textarea class="task-tugasan" required placeholder="Sila tuliskan latihan atau muka surat buku teks..."></textarea></div>`;
             document.getElementById('tasksContainer').appendChild(div);
         }
 
@@ -443,11 +435,11 @@
             fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify(payload) })
             .then(res => res.json())
             .then(data => {
-                alert("Rekod berjaya dihantar!"); document.getElementById('absenceForm').reset();
+                alert("Maklumat cuti dan tugasan berjaya dihantar!"); document.getElementById('absenceForm').reset();
                 document.getElementById('tasksContainer').innerHTML = ''; taskCount = 0; addPeriod();
                 loadDataFromSheets(); navigateTo('dashboard', document.querySelectorAll('.nav-item')[0]);
             })
-            .catch(err => alert("Ralat semasa menghantar."))
+            .catch(err => alert("Ralat semasa menghantar. Semak pautan URL anda."))
             .finally(() => { document.getElementById('btnSubmitAbsence').disabled = false; document.getElementById('loadingMsgAbsence').style.display = 'none'; });
         });
 
