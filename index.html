@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>School Relief - Record Absence</title>
+    <title>School Relief Management System</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-dark: #0f172a; /* Warna sidebar dark blue */
+            --bg-dark: #0f172a; 
             --bg-light: #f8fafc;
             --border: #e2e8f0;
             --primary: #1e3a8a;
@@ -15,60 +15,74 @@
             --text-main: #0f172a;
             --text-muted: #64748b;
             --accent: #f59e0b;
+            --success: #10b981;
+            --danger: #ef4444;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
         body { display: flex; background-color: var(--bg-light); height: 100vh; overflow: hidden; }
 
         /* Sidebar Styles */
-        .sidebar { width: 250px; background-color: var(--bg-dark); color: white; display: flex; flex-direction: column; padding: 20px 0; }
+        .sidebar { width: 250px; background-color: var(--bg-dark); color: white; display: flex; flex-direction: column; padding: 20px 0; flex-shrink: 0;}
         .logo-container { display: flex; align-items: center; padding: 0 20px 30px; font-weight: 700; font-size: 1.2rem; color: var(--accent); }
         .logo-icon { background: var(--accent); color: var(--bg-dark); border-radius: 4px; padding: 4px 8px; margin-right: 10px; }
         
-        .nav-item { padding: 12px 20px; color: #cbd5e1; text-decoration: none; display: block; font-size: 0.9rem; margin-bottom: 5px; }
-        .nav-item:hover, .nav-item.active { background-color: rgba(255,255,255,0.1); color: white; border-left: 3px solid var(--accent); }
+        .nav-item { padding: 12px 20px; color: #cbd5e1; text-decoration: none; display: block; font-size: 0.9rem; margin-bottom: 5px; cursor: pointer; border-left: 3px solid transparent;}
+        .nav-item:hover { background-color: rgba(255,255,255,0.05); }
+        .nav-item.active { background-color: rgba(255,255,255,0.1); color: white; border-left-color: var(--accent); }
         
         .actions-label { font-size: 0.75rem; color: var(--text-muted); padding: 20px 20px 10px; font-weight: 600; letter-spacing: 1px; }
         .btn-record-sidebar { margin: 0 20px; background: rgba(245, 158, 11, 0.1); border: 1px solid var(--accent); color: var(--accent); padding: 10px; border-radius: 6px; cursor: pointer; font-weight: 600; text-align: left; }
+        .btn-record-sidebar:hover { background: rgba(245, 158, 11, 0.2); }
 
         /* Main Content Styles */
         .main-content { flex: 1; display: flex; flex-direction: column; overflow-y: auto; }
-        .header { background: white; padding: 15px 30px; border-bottom: 1px solid var(--border); display: flex; align-items: center; font-weight: 600; color: var(--text-main); }
+        .header { background: white; padding: 15px 30px; border-bottom: 1px solid var(--border); display: flex; align-items: center; font-weight: 600; color: var(--text-main); position: sticky; top: 0; z-index: 10;}
         
-        .content-area { padding: 30px; max-width: 900px; margin: 0 auto; width: 100%; }
+        .content-area { padding: 30px; max-width: 1000px; margin: 0 auto; width: 100%; }
+        .page-title { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 30px;}
         .page-title h1 { font-size: 1.5rem; margin-bottom: 5px; color: var(--text-main); }
-        .page-title p { color: var(--text-muted); font-size: 0.9rem; margin-bottom: 30px; }
+        .page-title p { color: var(--text-muted); font-size: 0.9rem; }
 
-        /* Card Form */
+        /* Pages (SPA concept) */
+        .page-section { display: none; animation: fadeIn 0.3s ease-in-out; }
+        .page-section.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Reusable UI Components */
         .card { background: white; border: 1px solid var(--border); border-radius: 8px; padding: 25px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
-        .card-header { margin-bottom: 20px; }
-        .card-header h2 { font-size: 1.1rem; color: var(--text-main); }
-        .card-header p { font-size: 0.85rem; color: var(--text-muted); }
+        .btn { padding: 10px 20px; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 0.9rem; border: none; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover { background: var(--primary-hover); }
+        
+        .badge { padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 600; }
+        .badge-pending { background: #fee2e2; color: #dc2626; }
+        .badge-covered { background: #d1fae5; color: #059669; }
 
+        /* --- Dashboard Specific --- */
+        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 20px; }
+        .stat-card { background: white; padding: 20px; border-radius: 8px; border: 1px solid var(--border); border-top: 3px solid var(--primary); }
+        .stat-card.green { border-top-color: var(--success); }
+        .stat-card.red { border-top-color: var(--danger); }
+        .stat-title { font-size: 0.75rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; margin-bottom: 10px; }
+        .stat-value { font-size: 2rem; font-weight: 700; color: var(--text-main); margin-bottom: 5px;}
+        .stat-desc { font-size: 0.8rem; color: var(--text-muted); }
+
+        /* --- List Items (Absences & Teachers) --- */
+        .list-item { background: white; border: 1px solid var(--border); border-radius: 8px; padding: 15px 20px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; }
+        .list-item-main h3 { font-size: 1rem; color: var(--text-main); margin-bottom: 4px; }
+        .list-item-sub { font-size: 0.85rem; color: var(--text-muted); display: flex; gap: 15px;}
+        
+        .teachers-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 15px; }
+
+        /* --- Form Specific (Record Absence) --- */
         .form-group { margin-bottom: 15px; }
         label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-main); margin-bottom: 6px; }
-        input, select, textarea { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 0.9rem; color: var(--text-main); outline: none; transition: border 0.3s; }
-        input:focus, select:focus, textarea:focus { border-color: var(--primary); }
-        textarea { resize: vertical; min-height: 80px; }
-
+        input, select, textarea { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 0.9rem; outline: none; }
         .row { display: flex; gap: 15px; }
         .col { flex: 1; }
-
-        /* Relief Tasks Section */
-        .task-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .btn-add { background: white; border: 1px solid var(--border); color: var(--text-main); padding: 6px 12px; border-radius: 6px; font-size: 0.85rem; cursor: pointer; font-weight: 500; display: flex; align-items: center; gap: 5px;}
-        .btn-add:hover { background: var(--bg-light); }
-
-        .task-block { border: 1px solid var(--border); border-radius: 6px; padding: 20px; margin-bottom: 15px; background: var(--bg-light); position: relative; }
-        .task-block-title { font-size: 0.8rem; font-weight: 700; color: var(--primary); margin-bottom: 15px; text-transform: uppercase; letter-spacing: 0.5px; }
-        .btn-remove { position: absolute; top: 15px; right: 15px; background: #fee2e2; border: none; color: #dc2626; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.75rem; font-weight: 600;}
-
-        .action-buttons { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; margin-bottom: 40px; }
-        .btn { padding: 10px 20px; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 0.9rem; border: none; }
-        .btn-cancel { background: white; border: 1px solid var(--border); color: var(--text-main); }
-        .btn-submit { background: var(--primary); color: white; }
-        .btn-submit:hover { background: var(--primary-hover); }
-        
+        .task-block { border: 1px solid var(--border); border-radius: 6px; padding: 20px; margin-bottom: 15px; background: var(--bg-light); position: relative;}
+        .btn-remove { position: absolute; top: 15px; right: 15px; background: #fee2e2; color: #dc2626; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.75rem;}
         #loadingMsg { display: none; text-align: right; color: var(--primary); font-size: 0.9rem; font-weight: 600; margin-top: 10px; }
     </style>
 </head>
@@ -78,92 +92,233 @@
         <div class="logo-container">
             <span class="logo-icon">📅</span> School Relief
         </div>
-        <a href="#" class="nav-item">Dashboard</a>
-        <a href="#" class="nav-item active">Absences</a>
-        <a href="#" class="nav-item">Teachers</a>
+        <div class="nav-item active" onclick="navigateTo('dashboard', this)">Dashboard</div>
+        <div class="nav-item" onclick="navigateTo('absences', this)">Absences</div>
+        <div class="nav-item" onclick="navigateTo('teachers', this)">Teachers</div>
         
         <div class="actions-label">ACTIONS</div>
-        <button class="btn-record-sidebar">+ Record Absence</button>
+        <button class="btn-record-sidebar" onclick="navigateTo('record', null)">+ Record Absence</button>
     </div>
 
     <div class="main-content">
         <div class="header">
-            <span style="color:var(--text-muted); margin-right:10px;">📄</span> Relief Teacher Management System
+            📄 Relief Teacher Management System
         </div>
         
         <div class="content-area">
-            <div class="page-title">
-                <h1>Record Absence</h1>
-                <p>Submit absence and leave class work for relief teachers</p>
+            
+            <div id="dashboard" class="page-section active">
+                <div class="page-title">
+                    <div>
+                        <h1>Today's Overview</h1>
+                        <p id="todayDate">Loading date...</p>
+                    </div>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-title">TEACHERS ABSENT</div>
+                        <div class="stat-value">2</div>
+                        <div class="stat-desc">Reported for today</div>
+                    </div>
+                    <div class="stat-card green">
+                        <div class="stat-title">PERIODS COVERED</div>
+                        <div class="stat-value">1</div>
+                        <div class="stat-desc">Successfully assigned</div>
+                    </div>
+                    <div class="stat-card red">
+                        <div class="stat-title">UNCOVERED</div>
+                        <div class="stat-value">4</div>
+                        <div class="stat-desc" style="color:var(--danger)">Periods need attention</div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3 style="margin-bottom: 15px; font-size: 1.1rem;">Coverage Status</h3>
+                    <div style="display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 5px; color: var(--text-muted)">
+                        <span>20% Covered</span>
+                        <span>1 of 5 periods</span>
+                    </div>
+                    <div style="width: 100%; background: var(--border); height: 10px; border-radius: 5px; overflow: hidden;">
+                        <div style="width: 20%; background: var(--primary); height: 100%;"></div>
+                    </div>
+                </div>
+
+                <h3 style="margin-bottom: 15px; margin-top: 30px;">Today's Absences</h3>
+                <div class="list-item">
+                    <div class="list-item-main">
+                        <h3>Cik Nurul Ain binti Ahmad</h3>
+                        <div class="list-item-sub">
+                            <span>Matematik</span>
+                            <span>📅 MC (Sakit)</span>
+                        </div>
+                    </div>
+                    <div><span class="badge badge-pending">Pending</span></div>
+                </div>
             </div>
 
-            <form id="absenceForm">
-                <div class="card">
-                    <div class="card-header">
-                        <h2>Absence Details</h2>
-                        <p>Who is absent, when, and why?</p>
+            <div id="absences" class="page-section">
+                <div class="page-title">
+                    <div>
+                        <h1>Absences</h1>
+                        <p>All recorded teacher absences</p>
                     </div>
-                    
-                    <div class="form-group">
-                        <label>Teacher</label>
-                        <select id="namaGuru" required>
-                            <option value="">Select teacher...</option>
-                            <option value="Cik Nurul Ain binti Ahmad">Cik Nurul Ain binti Ahmad</option>
-                            <option value="En. Hafiz bin Zulkifli">En. Hafiz bin Zulkifli</option>
-                            <option value="Pn. Siti Hajar binti Malik">Pn. Siti Hajar binti Malik</option>
-                        </select>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>Date of Absence</label>
-                        <input type="date" id="tarikh" required>
-                    </div>
-
-                    <div class="form-group">
-                        <label>Reason</label>
-                        <select id="sebab" required>
-                            <option value="">Select reason...</option>
-                            <option value="MC (Sakit)">MC (Sakit)</option>
-                            <option value="CRK (Cuti Rehat Khas)">CRK (Cuti Rehat Khas)</option>
-                            <option value="Kursus/Tugas Rasmi">Kursus/Tugas Rasmi</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label>Additional Notes (optional)</label>
-                        <textarea id="nota" placeholder="Any additional information for the coordinator..."></textarea>
-                    </div>
+                    <button class="btn btn-primary" onclick="navigateTo('record', null)">+ Record Absence</button>
                 </div>
 
-                <div class="card">
-                    <div class="task-header">
-                        <div>
-                            <h2>Relief Tasks</h2>
-                            <p>Add one task per class period. List the work students need to do.</p>
+                <div class="list-item">
+                    <div class="list-item-main">
+                        <h3>Pn. Siti Hajar binti Malik — <span style="font-weight:normal; color:var(--text-muted)">Sains</span></h3>
+                        <div class="list-item-sub" style="margin-top: 5px;">
+                            <span>Kursus</span>
+                            <span>📅 13 Jun 2026</span>
+                            <span>⏱ 2 periods</span>
                         </div>
-                        <button type="button" class="btn-add" onclick="addPeriod()">+ Add Period</button>
+                    </div>
+                    <div><span class="badge badge-covered">Covered</span></div>
+                </div>
+
+                <div class="list-item">
+                    <div class="list-item-main">
+                        <h3>Cik Nurul Ain binti Ahmad — <span style="font-weight:normal; color:var(--text-muted)">Matematik</span></h3>
+                        <div class="list-item-sub" style="margin-top: 5px;">
+                            <span>MC (Sakit)</span>
+                            <span>📅 14 Jun 2026</span>
+                            <span>⏱ 3 periods</span>
+                        </div>
+                    </div>
+                    <div><span class="badge badge-pending">Pending</span></div>
+                </div>
+            </div>
+
+            <div id="teachers" class="page-section">
+                <div class="page-title">
+                    <div>
+                        <h1>Teachers</h1>
+                        <p>Manage your school's teacher roster</p>
+                    </div>
+                    <button class="btn btn-primary" onclick="alert('Fungsi Add Teacher akan datang!')">+ Add Teacher</button>
+                </div>
+
+                <div class="teachers-grid">
+                    <div class="card" style="padding: 20px; margin-bottom:0;">
+                        <h3 style="font-size: 1rem; margin-bottom: 5px;">Cik Faridah binti Ismail</h3>
+                        <span style="background:#f1f5f9; padding:2px 8px; font-size:0.75rem; border-radius:4px; margin-bottom:15px; display:inline-block;">Bahasa Inggeris</span>
+                        <div style="font-size: 0.8rem; color: var(--text-muted); display:flex; flex-direction:column; gap:5px;">
+                            <span>✉️ faridah.i@sekolah.edu.my</span>
+                            <span>📞 012-3456789</span>
+                        </div>
+                    </div>
+                    <div class="card" style="padding: 20px; margin-bottom:0;">
+                        <h3 style="font-size: 1rem; margin-bottom: 5px;">En. Hafiz bin Zulkifli</h3>
+                        <span style="background:#f1f5f9; padding:2px 8px; font-size:0.75rem; border-radius:4px; margin-bottom:15px; display:inline-block;">Sejarah</span>
+                        <div style="font-size: 0.8rem; color: var(--text-muted); display:flex; flex-direction:column; gap:5px;">
+                            <span>✉️ hafiz.z@sekolah.edu.my</span>
+                            <span>📞 014-5566778</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="record" class="page-section">
+                <div class="page-title">
+                    <div>
+                        <h1>Record Absence</h1>
+                        <p>Submit absence and leave class work for relief teachers</p>
+                    </div>
+                </div>
+
+                <form id="absenceForm">
+                    <div class="card">
+                        <h2 style="font-size: 1.1rem; margin-bottom: 5px;">Absence Details</h2>
+                        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 20px;">Who is absent, when, and why?</p>
+                        
+                        <div class="form-group">
+                            <label>Teacher</label>
+                            <select id="namaGuru" required>
+                                <option value="">Select teacher...</option>
+                                <option value="Cik Nurul Ain binti Ahmad">Cik Nurul Ain binti Ahmad</option>
+                                <option value="En. Hafiz bin Zulkifli">En. Hafiz bin Zulkifli</option>
+                                <option value="Pn. Siti Hajar binti Malik">Pn. Siti Hajar binti Malik</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Date of Absence</label>
+                            <input type="date" id="tarikh" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Reason</label>
+                            <select id="sebab" required>
+                                <option value="">Select reason...</option>
+                                <option value="MC (Sakit)">MC (Sakit)</option>
+                                <option value="CRK (Cuti Rehat Khas)">CRK (Cuti Rehat Khas)</option>
+                                <option value="Kursus/Tugas Rasmi">Kursus/Tugas Rasmi</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Additional Notes (optional)</label>
+                            <textarea id="nota" placeholder="Any additional information..."></textarea>
+                        </div>
                     </div>
 
-                    <div id="tasksContainer">
+                    <div class="card">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                            <div>
+                                <h2 style="font-size: 1.1rem;">Relief Tasks</h2>
+                                <p style="font-size: 0.85rem; color: var(--text-muted);">Add one task per class period.</p>
+                            </div>
+                            <button type="button" class="btn" style="border:1px solid var(--border); background:white;" onclick="addPeriod()">+ Add Period</button>
                         </div>
-                </div>
 
-                <div class="action-buttons">
-                    <button type="button" class="btn btn-cancel">Cancel</button>
-                    <button type="submit" class="btn btn-submit">Submit Absence</button>
-                </div>
-                <div id="loadingMsg">Menghantar data ke sistem... Sila tunggu.</div>
-            </form>
+                        <div id="tasksContainer"></div>
+                    </div>
+
+                    <div style="display: flex; justify-content: flex-end; gap: 10px; margin-bottom: 40px;">
+                        <button type="button" class="btn" style="background: white; border: 1px solid var(--border);" onclick="navigateTo('absences', null)">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Submit Absence</button>
+                    </div>
+                    <div id="loadingMsg">Menghantar data ke sistem... Sila tunggu.</div>
+                </form>
+            </div>
+
         </div>
     </div>
 
     <script>
+        // --- 1. NAVIGATION LOGIC (SPA) ---
+        function navigateTo(pageId, navElement) {
+            // Sembunyikan semua page
+            document.querySelectorAll('.page-section').forEach(page => {
+                page.classList.remove('active');
+            });
+            
+            // Buang active state dari sidebar
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+
+            // Tunjuk page yang dipilih
+            document.getElementById(pageId).classList.add('active');
+            
+            // Aktifkan menu sidebar (kecuali jika diklik dari butang record)
+            if (navElement) {
+                navElement.classList.add('active');
+            }
+        }
+
+        // --- 2. SET TODAY'S DATE ON DASHBOARD ---
+        const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+        document.getElementById('todayDate').innerText = new Date().toLocaleDateString('en-GB', options);
+
+        // --- 3. RECORD ABSENCE FORM LOGIC ---
         // MASUKKAN LINK WEB APP URL DARI GOOGLE APPS SCRIPT DI SINI
         const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxZtfHwHiDluNCKyfYFbaG2kcJY2Xi831XxQ4OwoSNlB9HXePEj6xOjKAE3TG_jAHgy/exec"; 
 
         let taskCount = 0;
 
-        // Fungsi untuk tambah borang waktu kelas (Macam dalam gambar)
         function addPeriod() {
             taskCount++;
             const container = document.getElementById('tasksContainer');
@@ -172,8 +327,8 @@
             taskBlock.id = `task-${taskCount}`;
             
             taskBlock.innerHTML = `
-                <div class="task-block-title">PERIOD ${taskCount}</div>
-                ${taskCount > 1 ? `<button type="button" class="btn-remove" onclick="removePeriod('task-${taskCount}')">Remove</button>` : ''}
+                <div style="font-size: 0.8rem; font-weight: 700; color: var(--primary); margin-bottom: 15px;">PERIOD ${taskCount}</div>
+                ${taskCount > 1 ? `<button type="button" class="btn-remove" onclick="document.getElementById('task-${taskCount}').remove()">Remove</button>` : ''}
                 
                 <div class="row">
                     <div class="col form-group">
@@ -185,64 +340,48 @@
                         <input type="number" class="task-waktu" placeholder="1" required>
                     </div>
                 </div>
-                
                 <div class="form-group">
                     <label>Subject</label>
                     <input type="text" class="task-subjek" placeholder="e.g. Matematik" required>
                 </div>
-
                 <div class="form-group">
                     <label>Task / Work for Students</label>
-                    <textarea class="task-tugasan" placeholder="Describe the work students must complete during this period..." required></textarea>
-                </div>
-
-                <div class="form-group">
-                    <label>Relief Teacher (optional)</label>
-                    <input type="text" class="task-guruganti" placeholder="Name of teacher covering this period">
+                    <textarea class="task-tugasan" placeholder="Describe the work..." required></textarea>
                 </div>
             `;
             container.appendChild(taskBlock);
         }
 
-        // Fungsi padam waktu
-        function removePeriod(id) {
-            document.getElementById(id).remove();
-        }
-
-        // Tambah satu period secara automatik bila page dibuka
         window.onload = function() {
-            addPeriod();
-            // Set tarikh hari ini sebagai default
+            addPeriod(); // Setup form awal
             document.getElementById('tarikh').valueAsDate = new Date();
         };
 
-        // Fungsi hantar data pukal
+        // Handle Submit Form
         document.getElementById('absenceForm').addEventListener('submit', function(e) {
             e.preventDefault();
             
-            const btnSubmit = document.querySelector('.btn-submit');
+            const btnSubmit = document.querySelector('button[type="submit"]');
             const loadingMsg = document.getElementById('loadingMsg');
             btnSubmit.disabled = true;
             loadingMsg.style.display = 'block';
 
-            // Kumpul data utama
             const payload = {
                 tarikh: document.getElementById('tarikh').value,
                 namaGuru: document.getElementById('namaGuru').value,
                 sebab: document.getElementById('sebab').value,
                 nota: document.getElementById('nota').value,
-                tasks: [] // Array untuk simpan senarai kelas
+                tasks: []
             };
 
-            // Kumpul semua data dari blok waktu kelas
             const taskBlocks = document.querySelectorAll('.task-block');
             taskBlocks.forEach(block => {
                 payload.tasks.push({
                     kelas: block.querySelector('.task-kelas').value,
                     waktu: block.querySelector('.task-waktu').value,
-                    subjek: document.querySelector('.task-subjek').value,
+                    subjek: block.querySelector('.task-subjek').value,
                     tugasan: block.querySelector('.task-tugasan').value,
-                    guruGanti: block.querySelector('.task-guruganti').value || "Belum Ditetapkan"
+                    guruGanti: "Belum Ditetapkan"
                 });
             });
 
@@ -253,15 +392,16 @@
             })
             .then(response => response.json())
             .then(data => {
-                alert("Berjaya! Ketidakhadiran dan kerja relief telah direkodkan ke sistem.");
+                alert("Berjaya! Ketidakhadiran telah direkodkan.");
                 document.getElementById('absenceForm').reset();
                 document.getElementById('tasksContainer').innerHTML = '';
                 taskCount = 0;
-                addPeriod(); // Reset form
+                addPeriod();
+                navigateTo('absences', document.querySelectorAll('.nav-item')[1]); // Kembali ke senarai
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert("Ralat berlaku semasa menghantar data.");
+                alert("Ralat! Pastikan URL Google Apps Script betul.");
             })
             .finally(() => {
                 btnSubmit.disabled = false;
