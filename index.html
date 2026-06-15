@@ -41,7 +41,7 @@
         .card { background: white; border: 1px solid var(--border); border-radius: 8px; padding: 25px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
         .btn { padding: 10px 20px; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 0.9rem; border: none; }
         .btn-primary { background: var(--primary); color: white; }
-        .btn-success { background: var(--success); color: white; padding: 6px 12px; font-size: 0.8rem; }
+        .btn-success { background: var(--success); color: white; padding: 6px 12px; font-size: 0.8rem; border: none;}
         .badge { padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 600; }
         .badge-pending { background: #fee2e2; color: #dc2626; }
         .badge-covered { background: #d1fae5; color: #059669; }
@@ -83,7 +83,7 @@
 
     <div class="sidebar">
         <div class="logo-container">
-            <span class="logo-icon">📅</span> SISTEM MMI
+            <span class="logo-icon">📅</span> SISTEM MMI SMK AMPANG PECAH
         </div>
         <div class="nav-item active" onclick="navigateTo('dashboard', this)">Papan Pemuka</div>
         <div class="nav-item" onclick="navigateTo('absences', this)">Rekod Cuti</div>
@@ -105,16 +105,16 @@
                 </div>
                 <div class="stats-grid">
                     <div class="stat-card">
-                        <div class="stat-title">GURU BERCUTI</div><div class="stat-value" id="stat-absent">-</div><div class="stat-desc">Telah dilaporkan</div>
+                        <div class="stat-title">GURU BERCUTI HARI INI</div><div class="stat-value" id="stat-absent">-</div><div class="stat-desc">Telah dilaporkan</div>
                     </div>
                     <div class="stat-card green">
-                        <div class="stat-title">WAKTU DIGANTI</div><div class="stat-value" id="stat-covered">-</div><div class="stat-desc">Berjaya ditugaskan</div>
+                        <div class="stat-title">WAKTU DIGANTI HARI INI</div><div class="stat-value" id="stat-covered">-</div><div class="stat-desc">Berjaya ditugaskan</div>
                     </div>
                     <div class="stat-card red">
-                        <div class="stat-title">BELUM DIGANTI</div><div class="stat-value" id="stat-uncovered">-</div><div class="stat-desc" style="color:var(--danger)">Waktu perlukan guru ganti</div>
+                        <div class="stat-title">BELUM DIGANTI HARI INI</div><div class="stat-value" id="stat-uncovered">-</div><div class="stat-desc" style="color:var(--danger)">Waktu perlukan guru ganti</div>
                     </div>
                 </div>
-                <h3 style="margin-bottom: 15px; margin-top: 30px;">Rekod Cuti Terkini</h3>
+                <h3 style="margin-bottom: 15px; margin-top: 30px;">Rekod Cuti Keseluruhan</h3>
                 <div id="dashboard-list"><div class="loading-state">Mengambil data dari pangkalan...</div></div>
             </div>
 
@@ -199,9 +199,9 @@
     </div>
 
     <div class="modal-overlay" id="viewTaskModal">
-        <div class="modal" style="max-width: 600px;">
+        <div class="modal" style="max-width: 650px;">
             <div class="modal-header">
-                <span>Lihat Tugasan Kelas</span>
+                <span>Urus & Lihat Tugasan Kelas</span>
                 <button class="close-modal" onclick="closeTaskModal()">✖</button>
             </div>
             <div id="taskModalContent">
@@ -271,15 +271,24 @@
         }
 
         function processAbsences(rows) {
-            let groupedData = {}; let covered = 0; let uncovered = 0; let teachersSet = new Set();
+            let groupedData = {}; 
             
+            let todayCovered = 0; 
+            let todayUncovered = 0; 
+            let todayTeachersSet = new Set();
+            let todayFormatted = new Date().toLocaleDateString('ms-MY');
+
             rows.forEach(row => {
                 let tarikhFormatted = new Date(row[0]).toLocaleDateString('ms-MY');
-                let nama = row[1]; let status = row[9] || "Pending";
+                let nama = row[1]; 
+                let status = row[9] || "Pending";
                 let key = tarikhFormatted + "_" + nama;
 
-                teachersSet.add(nama);
-                status === "Covered" ? covered++ : uncovered++;
+                // Kira statistik jika rekod sama dengan tarikh hari ini
+                if (tarikhFormatted === todayFormatted) {
+                    todayTeachersSet.add(nama);
+                    status === "Covered" ? todayCovered++ : todayUncovered++;
+                }
 
                 if (!groupedData[key]) {
                     groupedData[key] = { 
@@ -288,7 +297,7 @@
                         tasks: [{ kelas: row[4], waktu: row[5], tugasan: row[7], guruGanti: row[8], status: status }]
                     };
                 } else {
-                    groupedData[key].periodsCount++; // Ini mengira jumlah blok kelas yang dihantar
+                    groupedData[key].periodsCount++; 
                     if (status === "Pending") groupedData[key].isPending = true;
                     groupedData[key].tasks.push({ kelas: row[4], waktu: row[5], tugasan: row[7], guruGanti: row[8], status: status });
                 }
@@ -296,9 +305,9 @@
 
             globalAbsenceData = groupedData; 
 
-            document.getElementById('stat-absent').innerText = teachersSet.size;
-            document.getElementById('stat-covered').innerText = covered;
-            document.getElementById('stat-uncovered').innerText = uncovered;
+            document.getElementById('stat-absent').innerText = todayTeachersSet.size;
+            document.getElementById('stat-covered').innerText = todayCovered;
+            document.getElementById('stat-uncovered').innerText = todayUncovered;
 
             let listHTML = '';
             let recordsArray = Object.values(groupedData).reverse();
@@ -307,12 +316,8 @@
             else {
                 recordsArray.forEach(record => {
                     let badgeClass = record.isPending ? 'badge-pending' : 'badge-covered';
-                    let badgeText = record.isPending ? 'Belum Diganti' : 'Selesai Diganti';
+                    let badgeText = record.isPending ? 'Belum Diganti Sepenuhnya' : 'Semua Selesai Diganti';
                     let keyStr = record.tarikh + "_" + record.nama;
-                    
-                    let actionButton = record.isPending ? 
-                        `<button class="btn btn-success" onclick="markAsCovered('${record.tarikh}', '${record.nama}')">✔ Tandakan Selesai</button>` : 
-                        `<span style="font-size: 0.8rem; color: var(--success); font-weight: 600;">✔ Semua Waktu Telah Diganti</span>`;
 
                     listHTML += `
                     <div class="list-item">
@@ -321,11 +326,8 @@
                             <div class="list-item-sub" style="margin-top: 5px;"><span>${record.sebab}</span><span>📅 ${record.tarikh}</span><span>⏱ ${record.periodsCount} tugasan kelas</span></div>
                         </div>
                         <div class="list-actions">
-                            <div style="display:flex; gap:10px; align-items:center;">
-                                <span class="badge ${badgeClass}">${badgeText}</span>
-                                <button class="btn" style="border:1px solid var(--border); background:white; padding:4px 8px; font-size:0.8rem;" onclick="viewTasks('${keyStr}')">👁️ Lihat Tugasan</button>
-                            </div>
-                            ${actionButton}
+                            <span class="badge ${badgeClass}" style="margin-bottom:5px;">${badgeText}</span>
+                            <button class="btn" style="border:1px solid var(--primary); background:white; color:var(--primary); padding:6px 12px; font-size:0.8rem;" onclick="viewTasks('${keyStr}')">👁️ Urus / Lihat Tugasan</button>
                         </div>
                     </div>`;
                 });
@@ -334,24 +336,28 @@
             document.getElementById('absences-list').innerHTML = listHTML;
         }
 
-        // --- FUNGSI PAPAR TUGASAN DALAM MODAL ---
+        // --- FUNGSI PAPAR TUGASAN DALAM MODAL (DIKEMAS KINI) ---
         function viewTasks(key) {
             const data = globalAbsenceData[key];
             let html = `
                 <div style="margin-bottom:20px; font-size:0.9rem;">
-                    <p style="margin-bottom:5px;"><strong>Guru Cuti:</strong> ${data.nama}</p>
+                    <p style="margin-bottom:5px;"><strong>Guru Cuti:</strong> ${data.nama} (📅 ${data.tarikh})</p>
                     <p style="color:var(--text-muted);"><strong>Nota Tambahan:</strong> ${data.nota || 'Tiada nota tambahan.'}</p>
                 </div>
                 <div style="display:flex; flex-direction:column; gap:15px;">
             `;
 
             data.tasks.forEach(t => {
-                let statusBadge = t.status === "Pending" ? `<span class="badge badge-pending">Belum Diganti</span>` : `<span class="badge badge-covered">Diganti oleh: ${t.guruGanti || 'Tidak Dinamakan'}</span>`;
+                // Letak butang Tetap Guru Ganti bersebelahan status setiap WAKTU
+                let statusAndAction = t.status === "Pending" ? 
+                    `<button class="btn btn-success" onclick="markAsCovered('${data.tarikh}', '${data.nama}', '${t.waktu}', '${t.kelas}')">➕ Tetap Guru Ganti</button>` : 
+                    `<span class="badge badge-covered" style="font-size:0.85rem;">Diganti oleh: ${t.guruGanti || 'Tidak Dinamakan'}</span>`;
+                
                 html += `
                 <div style="background:var(--bg-light); border:1px solid var(--border); border-radius:6px; padding:15px;">
-                    <div style="display:flex; justify-content:space-between; margin-bottom:10px; align-items:center;">
-                        <span style="font-weight:700; color:var(--primary);">Waktu ${t.waktu} — Kelas ${t.kelas}</span>
-                        ${statusBadge}
+                    <div style="display:flex; justify-content:space-between; margin-bottom:15px; align-items:center;">
+                        <span style="font-weight:700; color:var(--primary); font-size: 1.05rem;">Waktu ${t.waktu} — Kelas ${t.kelas}</span>
+                        ${statusAndAction}
                     </div>
                     <p style="font-size:0.85rem; color:var(--text-main); white-space: pre-wrap;"><strong>Tugasan / Arahan:</strong><br>${t.tugasan}</p>
                 </div>`;
@@ -362,23 +368,35 @@
             document.getElementById('viewTaskModal').style.display = 'flex';
         }
 
-        // --- FUNGSI UPDATE STATUS ---
-        function markAsCovered(tarikh, nama) {
-            let guruGanti = prompt(`Masukkan nama Guru Ganti untuk kelas ${nama} (Biar kosong jika tak pasti):`, "");
+        // --- FUNGSI UPDATE STATUS (DIKEMAS KINI SPESIFIK WAKTU) ---
+        function markAsCovered(tarikh, nama, waktu, kelas) {
+            let guruGanti = prompt(`Masukkan nama Guru Ganti untuk Kelas ${kelas} pada Waktu ${waktu}\n(Biar kosong jika tak pasti):`, "");
             if (guruGanti === null) return; 
 
-            document.getElementById('dashboard-list').innerHTML = '<div class="loading-state">Mengemas kini status... Sila tunggu.</div>';
-            document.getElementById('absences-list').innerHTML = '<div class="loading-state">Mengemas kini status... Sila tunggu.</div>';
+            closeTaskModal(); // Tutup modal supaya nampak loading di luar
 
-            const payload = { action: "mark_covered", tarikh: tarikh, nama: nama, guruGanti: guruGanti };
+            document.getElementById('dashboard-list').innerHTML = '<div class="loading-state">Mengemas kini status waktu '+waktu+'... Sila tunggu.</div>';
+            document.getElementById('absences-list').innerHTML = '<div class="loading-state">Mengemas kini status waktu '+waktu+'... Sila tunggu.</div>';
+
+            const payload = { 
+                action: "mark_covered", 
+                tarikh: tarikh, 
+                nama: nama, 
+                waktu: waktu, // Hantar waktu spesifik ke Apps Script
+                guruGanti: guruGanti 
+            };
 
             fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify(payload) })
             .then(res => res.json())
             .then(data => {
-                alert("Status berjaya ditukar kepada Selesai Diganti!");
-                loadDataFromSheets(); 
+                if(data.status === "success") {
+                    alert("Status untuk Waktu " + waktu + " berjaya dikemas kini!");
+                    loadDataFromSheets(); 
+                } else {
+                    alert("Ralat dari server: " + data.message);
+                }
             })
-            .catch(err => alert("Ralat semasa mengemas kini status."));
+            .catch(err => alert("Ralat sambungan semasa mengemas kini status."));
         }
 
         // --- SUBMIT NEW TEACHER ---
@@ -402,7 +420,7 @@
             .finally(() => { document.getElementById('btnSubmitTeacher').disabled = false; document.getElementById('loadingMsgTeacher').style.display = 'none'; });
         });
 
-        // --- RECORD ABSENCE FORM (DIPERBAIKI) ---
+        // --- RECORD ABSENCE FORM ---
         let taskCount = 0;
         function addPeriod() {
             taskCount++;
