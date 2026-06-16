@@ -84,6 +84,7 @@
 </head>
 <body>
 
+    <!-- Sidebar -->
     <div class="sidebar">
         <div class="logo-container"><span class="logo-icon">📅</span> SISTEM MMI</div>
         <div class="nav-item active" onclick="navigateTo('dashboard', this)">Papan Pemuka</div>
@@ -93,17 +94,19 @@
         <button class="btn-record-sidebar" onclick="navigateTo('record', null)">+ Lapor Cuti/MMI</button>
     </div>
 
+    <!-- Main Content -->
     <div class="main-content">
         <div class="header">📄 Sistem Melindungi Masa Instruksional (MMI)</div>
         
         <div class="content-area">
+            <!-- DASHBOARD DENGAN FILTER TARIKH -->
             <div id="dashboard" class="page-section active">
                 <div class="page-title">
                     <div>
                         <h1>Ringkasan Harian</h1>
                         <p style="margin-top:5px; color:var(--text-main); font-weight:500;">
                             Pilih Tarikh: 
-                            <input type="date" id="filterDate" style="padding:6px; border-radius:6px; border:1px solid var(--border); margin-left:10px; font-family:'Inter'; outline:none; max-width:150px;">
+                            <input type="date" id="filterDateDashboard" style="padding:6px; border-radius:6px; border:1px solid var(--border); margin-left:10px; font-family:'Inter'; outline:none; max-width:150px;">
                         </p>
                     </div>
                     <button class="btn btn-primary" onclick="loadDataFromSheets()">🔄 Muat Semula Data</button>
@@ -119,21 +122,30 @@
                         <div class="stat-title">BELUM DIGANTI</div><div class="stat-value" id="stat-uncovered">-</div><div class="stat-desc" style="color:var(--danger)">Waktu perlukan guru ganti</div>
                     </div>
                 </div>
-                <h3 style="margin-bottom: 15px; margin-top: 30px;">Rekod Cuti (Tarikh Dipilih)</h3>
+                <h3 style="margin-bottom: 15px; margin-top: 30px;">Senarai Guru Cuti (Tarikh Dipilih)</h3>
                 <div id="dashboard-list"><div class="loading-state">Mengambil data dari pangkalan...</div></div>
             </div>
 
+            <!-- ABSENCES (REKOD CUTI) -->
             <div id="absences" class="page-section">
                 <div class="page-title">
-                    <div><h1>Senarai Guru Cuti</h1><p>Semua rekod sejarah ketidakhadiran guru</p></div>
+                    <div>
+                        <h1>Rekod Cuti Keseluruhan</h1>
+                        <p style="margin-top:5px; color:var(--text-main); font-weight:500;">
+                            Tapis Tarikh: 
+                            <input type="date" id="filterDateAbsences" style="padding:6px; border-radius:6px; border:1px solid var(--border); margin-left:10px; font-family:'Inter'; outline:none; max-width:150px;">
+                            <button class="btn" style="border:1px solid var(--border); background:white; padding:6px 12px; margin-left:5px; font-size:0.85rem;" onclick="resetAbsenceFilter()">Lihat Semua Rekod</button>
+                        </p>
+                    </div>
                     <button class="btn btn-primary" onclick="navigateTo('record', null)">+ Lapor Cuti/MMI</button>
                 </div>
                 <div id="absences-list"><div class="loading-state">Mengambil data dari pangkalan...</div></div>
             </div>
 
+            <!-- TEACHERS -->
             <div id="teachers" class="page-section">
                 <div class="page-title">
-                    <div><h1>Senarai Guru</h1><p>Urus senarai profil guru sekolah anda</p></div>
+                    <div><h1>Senarai Profil Guru</h1><p>Urus senarai guru sekolah anda</p></div>
                     <button class="btn btn-primary" onclick="openTeacherModal()">+ Tambah Guru</button>
                 </div>
                 <div id="teachers-grid" class="teachers-grid">
@@ -141,6 +153,7 @@
                 </div>
             </div>
 
+            <!-- RECORD ABSENCE FORM -->
             <div id="record" class="page-section">
                 <div class="page-title"><div><h1>Lapor Ketidakhadiran (MMI)</h1><p>Hantar maklumat cuti dan tinggalkan tugasan kelas</p></div></div>
                 <form id="absenceForm">
@@ -172,12 +185,13 @@
                         <button type="button" class="btn" style="background: white; border: 1px solid var(--border);" onclick="navigateTo('dashboard', document.querySelectorAll('.nav-item')[0])">Batal</button>
                         <button type="submit" class="btn btn-primary" id="btnSubmitAbsence">Hantar Rekod</button>
                     </div>
-                    <div id="loadingMsgAbsence" class="submit-loading">Mencipta fail & menghantar data ke sistem (Ini mungkin ambil masa)...</div>
+                    <div id="loadingMsgAbsence" class="submit-loading">Mencipta fail & menghantar data ke sistem (Sila tunggu)...</div>
                 </form>
             </div>
         </div>
     </div>
 
+    <!-- MODAL ADD TEACHER -->
     <div class="modal-overlay" id="teacherModal">
         <div class="modal">
             <div class="modal-header"><span>Tambah Guru Baharu</span><button class="close-modal" onclick="closeTeacherModal()">✖</button></div>
@@ -195,6 +209,7 @@
         </div>
     </div>
 
+    <!-- MODAL VIEW TASKS & ASSIGN -->
     <div class="modal-overlay" id="viewTaskModal">
         <div class="modal" style="max-width: 650px;">
             <div class="modal-header"><span>Urus & Lihat Tugasan Kelas</span><button class="close-modal" onclick="closeTaskModal()">✖</button></div>
@@ -206,8 +221,8 @@
         // MASUKKAN LINK WEB APP URL KAU DI SINI
         const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxZtfHwHiDluNCKyfYFbaG2kcJY2Xi831XxQ4OwoSNlB9HXePEj6xOjKAE3TG_jAHgy/exec"; 
 
-        let globalAbsenceRows = []; // Untuk simpan data raw (baris)
-        let globalAbsenceData = {}; // Untuk simpan data modal
+        let globalAbsenceRows = []; 
+        let globalAbsenceData = {}; 
 
         function navigateTo(pageId, navElement) {
             document.querySelectorAll('.page-section').forEach(p => p.classList.remove('active'));
@@ -220,25 +235,32 @@
         function closeTeacherModal() { document.getElementById('teacherModal').style.display = 'none'; document.getElementById('addTeacherForm').reset(); }
         function closeTaskModal() { document.getElementById('viewTaskModal').style.display = 'none'; }
 
-        // Setup filter date hari ini
+        // Setup Tarikh Automatik HARI INI
         window.onload = function() {
             let today = new Date();
             let yyyy = today.getFullYear();
             let mm = String(today.getMonth() + 1).padStart(2, '0');
             let dd = String(today.getDate()).padStart(2, '0');
-            document.getElementById('filterDate').value = `${yyyy}-${mm}-${dd}`;
-            document.getElementById('tarikh').valueAsDate = today;
+            let todayStr = `${yyyy}-${mm}-${dd}`; // Format YYYY-MM-DD
+            
+            // Set ke semua ruangan tarikh
+            document.getElementById('filterDateDashboard').value = todayStr;
+            document.getElementById('filterDateAbsences').value = todayStr;
+            document.getElementById('tarikh').value = todayStr;
             
             addPeriod(); 
             loadDataFromSheets();
         };
 
-        // Dengar perubahan pada Tarikh Filter
-        document.getElementById('filterDate').addEventListener('change', function() {
-            if(globalAbsenceRows.length > 0) {
-                renderAbsenceData(); // Render semula Papan Pemuka bila tarikh ditukar
-            }
-        });
+        // Fungsi Reset Filter
+        function resetAbsenceFilter() {
+            document.getElementById('filterDateAbsences').value = "";
+            renderAbsenceData();
+        }
+
+        // Listener bila tarikh ditukar
+        document.getElementById('filterDateDashboard').addEventListener('change', renderAbsenceData);
+        document.getElementById('filterDateAbsences').addEventListener('change', renderAbsenceData);
 
         function loadDataFromSheets() {
             document.getElementById('dashboard-list').innerHTML = '<div class="loading-state">Mengambil data...</div>';
@@ -249,7 +271,7 @@
             .then(res => res.json())
             .then(result => {
                 if(result.status === "success") {
-                    globalAbsenceRows = result.absences; // Simpan untuk guna masa filter
+                    globalAbsenceRows = result.absences; 
                     renderAbsenceData();
                     processTeachers(result.teachers);
                 }
@@ -258,8 +280,7 @@
         }
 
         function processTeachers(teachers) {
-            let gridHTML = '';
-            let dropdownHTML = '<option value="">Pilih guru...</option>';
+            let gridHTML = ''; let dropdownHTML = '<option value="">Pilih guru...</option>';
             if (teachers.length === 0) {
                 gridHTML = '<p style="color:var(--text-muted);">Belum ada guru direkodkan.</p>';
             } else {
@@ -282,44 +303,49 @@
 
         function deleteTeacher(nama) {
             if(!confirm(`Anda pasti mahu memadam profil guru: ${nama}?`)) return;
-
             document.getElementById('teachers-grid').innerHTML = '<div class="loading-state">Memadam data guru... Sila tunggu.</div>';
-
-            const payload = { action: "delete_teacher", nama: nama };
-
-            fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify(payload) })
-            .then(res => res.json())
-            .then(data => {
-                alert(`Profil ${nama} berjaya dipadam!`);
-                loadDataFromSheets();
+            
+            // Ditambah headers dan redirect untuk mengelakkan CORS issue
+            fetch(WEB_APP_URL, { 
+                method: 'POST', 
+                redirect: "follow",
+                headers: { "Content-Type": "text/plain;charset=utf-8" },
+                body: JSON.stringify({ action: "delete_teacher", nama: nama }) 
             })
+            .then(res => res.json())
+            .then(data => { alert(`Profil ${nama} berjaya dipadam!`); loadDataFromSheets(); })
             .catch(err => alert("Ralat semasa memadam data."));
         }
 
-        // FUNGSI RENDER CUTI (Berdasarkan Filter Tarikh)
         function renderAbsenceData() {
             let groupedData = {}; 
             let statsCovered = 0; let statsUncovered = 0; let statsTeachersSet = new Set();
             
-            // Formatkan tarikh dari input filter ke DD/MM/YYYY untuk padanan
-            let filterDateObj = new Date(document.getElementById('filterDate').value);
-            let filterFormatted = filterDateObj.toLocaleDateString('ms-MY');
+            let filterDashboard = document.getElementById('filterDateDashboard').value; 
+            let filterAbsences = document.getElementById('filterDateAbsences').value;   
 
             globalAbsenceRows.forEach(row => {
-                let tarikhFormatted = new Date(row[0]).toLocaleDateString('ms-MY');
+                // Ekstrak tarikh dari Sheets dengan selamat supaya sama dengan format input date
+                let d = new Date(row[0]);
+                let d_yyyy = d.getFullYear();
+                let d_mm = String(d.getMonth() + 1).padStart(2, '0');
+                let d_dd = String(d.getDate()).padStart(2, '0');
+                let rowDateISO = `${d_yyyy}-${d_mm}-${d_dd}`; // Format YYYY-MM-DD
+                let displayDate = d.toLocaleDateString('ms-MY');
+
                 let nama = row[1]; let status = row[9] || "Pending";
                 let lampiranUrl = row[10] || ""; 
-                let key = tarikhFormatted + "_" + nama;
+                let key = rowDateISO + "_" + nama;
 
-                // Hanya kira statistik JIKA rekod ini sepadan dengan TARIKH DIPILIH
-                if (tarikhFormatted === filterFormatted) {
+                // Hanya kira statistik Dashboard jika tarikh sama
+                if (rowDateISO === filterDashboard) {
                     statsTeachersSet.add(nama);
                     status === "Covered" ? statsCovered++ : statsUncovered++;
                 }
 
                 if (!groupedData[key]) {
                     groupedData[key] = { 
-                        nama: nama, tarikh: tarikhFormatted, sebab: row[2], nota: row[3], subjek: row[6], 
+                        nama: nama, rowDateISO: rowDateISO, displayDate: displayDate, sebab: row[2], nota: row[3], subjek: row[6], 
                         periodsCount: 1, isPending: (status === "Pending"),
                         tasks: [{ kelas: row[4], waktu: row[5], tugasan: row[7], guruGanti: row[8], status: status, lampiran: lampiranUrl }]
                     };
@@ -332,14 +358,13 @@
 
             globalAbsenceData = groupedData; 
 
-            // Update Statistik Dashboard
             document.getElementById('stat-absent').innerText = statsTeachersSet.size;
             document.getElementById('stat-covered').innerText = statsCovered;
             document.getElementById('stat-uncovered').innerText = statsUncovered;
 
             let dashboardListHTML = ''; let absencesListHTML = ''; 
             let recordsArray = Object.values(groupedData).reverse();
-            let dashboardCount = 0;
+            let dashboardCount = 0; let absencesCount = 0;
 
             if(recordsArray.length === 0) { 
                 dashboardListHTML = absencesListHTML = '<p style="color:var(--text-muted)">Tiada rekod cuti setakat ini.</p>'; 
@@ -347,23 +372,25 @@
                 recordsArray.forEach(record => {
                     let badgeClass = record.isPending ? 'badge-pending' : 'badge-covered';
                     let badgeText = record.isPending ? 'Belum Diganti Sepenuhnya' : 'Semua Selesai Diganti';
-                    let keyStr = record.tarikh + "_" + record.nama;
+                    let keyStr = record.rowDateISO + "_" + record.nama; 
 
-                    let cardHTML = `<div class="list-item"><div class="list-item-main"><h3>${record.nama} — <span style="font-weight:normal; color:var(--text-muted)">${record.subjek}</span></h3><div class="list-item-sub" style="margin-top: 5px;"><span>${record.sebab}</span><span>📅 ${record.tarikh}</span><span>⏱ ${record.periodsCount} tugasan kelas</span></div></div><div class="list-actions"><span class="badge ${badgeClass}" style="margin-bottom:5px;">${badgeText}</span><button class="btn" style="border:1px solid var(--primary); background:white; color:var(--primary); padding:6px 12px; font-size:0.8rem;" onclick="viewTasks('${keyStr}')">👁️ Urus / Lihat Tugasan</button></div></div>`;
+                    let cardHTML = `<div class="list-item"><div class="list-item-main"><h3>${record.nama} — <span style="font-weight:normal; color:var(--text-muted)">${record.subjek}</span></h3><div class="list-item-sub" style="margin-top: 5px;"><span>${record.sebab}</span><span>📅 ${record.displayDate}</span><span>⏱ ${record.periodsCount} tugasan kelas</span></div></div><div class="list-actions"><span class="badge ${badgeClass}" style="margin-bottom:5px;">${badgeText}</span><button class="btn" style="border:1px solid var(--primary); background:white; color:var(--primary); padding:6px 12px; font-size:0.8rem;" onclick="viewTasks('${keyStr}')">👁️ Urus / Lihat Tugasan</button></div></div>`;
                     
-                    // Semua masuk di tab "Rekod Cuti"
-                    absencesListHTML += cardHTML;
-
-                    // HANYA MASUK DASHBOARD JIKA SAMA DENGAN TARIKH FILTER
-                    if (record.tarikh === filterFormatted) {
+                    // Masuk Dashboard jika tarikh sama dengan filter dashboard
+                    if (record.rowDateISO === filterDashboard) {
                         dashboardListHTML += cardHTML;
                         dashboardCount++;
                     }
+
+                    // Masuk Absences jika tarikh sama dengan filter absences ATAU jika filter kosong (Lihat Semua)
+                    if (filterAbsences === "" || record.rowDateISO === filterAbsences) {
+                        absencesListHTML += cardHTML;
+                        absencesCount++;
+                    }
                 });
 
-                if (dashboardCount === 0) {
-                    dashboardListHTML = '<p style="color:var(--text-muted)">Tiada guru direkodkan bercuti pada tarikh ini.</p>';
-                }
+                if (dashboardCount === 0) dashboardListHTML = '<p style="color:var(--text-muted)">Tiada guru direkodkan bercuti pada tarikh ini.</p>';
+                if (absencesCount === 0) absencesListHTML = '<p style="color:var(--text-muted)">Tiada rekod ditemui pada tarikh yang dipilih.</p>';
             }
             
             document.getElementById('dashboard-list').innerHTML = dashboardListHTML;
@@ -373,11 +400,11 @@
         // --- FUNGSI PAPAR TUGASAN & LAMPIRAN ---
         function viewTasks(key) {
             const data = globalAbsenceData[key];
-            let html = `<div style="margin-bottom:20px; font-size:0.9rem;"><p style="margin-bottom:5px;"><strong>Guru Cuti:</strong> ${data.nama} (📅 ${data.tarikh})</p><p style="color:var(--text-muted);"><strong>Nota Tambahan:</strong> ${data.nota || 'Tiada nota tambahan.'}</p></div><div style="display:flex; flex-direction:column; gap:15px;">`;
+            let html = `<div style="margin-bottom:20px; font-size:0.9rem;"><p style="margin-bottom:5px;"><strong>Guru Cuti:</strong> ${data.nama} (📅 ${data.displayDate})</p><p style="color:var(--text-muted);"><strong>Nota Tambahan:</strong> ${data.nota || 'Tiada nota tambahan.'}</p></div><div style="display:flex; flex-direction:column; gap:15px;">`;
 
             data.tasks.forEach(t => {
                 let statusAndAction = t.status === "Pending" ? 
-                    `<button class="btn btn-success" onclick="markAsCovered('${data.tarikh}', '${data.nama}', '${t.waktu}', '${t.kelas}')">➕ Tetap Guru Ganti</button>` : 
+                    `<button class="btn btn-success" onclick="markAsCovered('${data.rowDateISO}', '${data.nama}', '${t.waktu}', '${t.kelas}')">➕ Tetap Guru Ganti</button>` : 
                     `<span class="badge badge-covered" style="font-size:0.85rem;">Diganti oleh: ${t.guruGanti || 'Tidak Dinamakan'}</span>`;
                 
                 let lampiranBtn = t.lampiran ? `<br><a href="${t.lampiran}" target="_blank" class="btn-link">📎 Lihat Lampiran</a>` : '';
@@ -389,15 +416,21 @@
             document.getElementById('viewTaskModal').style.display = 'flex';
         }
 
-        function markAsCovered(tarikh, nama, waktu, kelas) {
+        function markAsCovered(tarikhISO, nama, waktu, kelas) {
             let guruGanti = prompt(`Masukkan nama Guru Ganti untuk Kelas ${kelas} pada Waktu ${waktu}\n(Biar kosong jika tak pasti):`, "");
             if (guruGanti === null) return; 
             closeTaskModal(); 
             document.getElementById('dashboard-list').innerHTML = '<div class="loading-state">Mengemas kini status waktu '+waktu+'... Sila tunggu.</div>';
             document.getElementById('absences-list').innerHTML = '<div class="loading-state">Mengemas kini status waktu '+waktu+'... Sila tunggu.</div>';
 
-            const payload = { action: "mark_covered", tarikh: tarikh, nama: nama, waktu: waktu, guruGanti: guruGanti };
-            fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify(payload) })
+            const payload = { action: "mark_covered", tarikh: tarikhISO, nama: nama, waktu: waktu, guruGanti: guruGanti };
+            
+            fetch(WEB_APP_URL, { 
+                method: 'POST', 
+                redirect: "follow",
+                headers: { "Content-Type": "text/plain;charset=utf-8" },
+                body: JSON.stringify(payload) 
+            })
             .then(res => res.json())
             .then(data => { if(data.status === "success") { alert("Status untuk Waktu " + waktu + " berjaya dikemas kini!"); loadDataFromSheets(); } else { alert("Ralat server: " + data.message); } })
             .catch(err => alert("Ralat sambungan semasa mengemas kini status."));
@@ -407,7 +440,13 @@
             e.preventDefault();
             document.getElementById('btnSubmitTeacher').disabled = true; document.getElementById('loadingMsgTeacher').style.display = 'block';
             const payload = { action: "add_teacher", nama: document.getElementById('t_name').value, subjek: document.getElementById('t_subject').value, email: document.getElementById('t_email').value, telefon: document.getElementById('t_phone').value };
-            fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify(payload) })
+            
+            fetch(WEB_APP_URL, { 
+                method: 'POST', 
+                redirect: "follow",
+                headers: { "Content-Type": "text/plain;charset=utf-8" },
+                body: JSON.stringify(payload) 
+            })
             .then(res => res.json())
             .then(data => { alert("Profil guru berjaya ditambah!"); closeTeacherModal(); loadDataFromSheets(); })
             .catch(err => alert("Ralat! Pastikan URL betul."))
@@ -490,15 +529,26 @@
                 });
             }
 
-            fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify(payload) })
+            fetch(WEB_APP_URL, { 
+                method: 'POST', 
+                redirect: "follow",
+                headers: { "Content-Type": "text/plain;charset=utf-8" },
+                body: JSON.stringify(payload) 
+            })
             .then(res => res.json())
             .then(data => {
-                alert("Maklumat cuti dan fail tugasan berjaya dihantar dan dicipta!"); 
+                alert("Maklumat cuti dan fail tugasan berjaya dihantar!"); 
                 document.getElementById('absenceForm').reset();
                 document.getElementById('tasksContainer').innerHTML = ''; taskCount = 0; addPeriod();
+                
+                // Pastikan tarikh kekal hari ini selepas hantar form
+                let today = new Date();
+                let todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+                document.getElementById('tarikh').value = todayStr;
+
                 loadDataFromSheets(); navigateTo('dashboard', document.querySelectorAll('.nav-item')[0]);
             })
-            .catch(err => alert("Ralat semasa menghantar. Semak pautan URL anda."))
+            .catch(err => alert("Ralat semasa menghantar. Sila cuba lagi."))
             .finally(() => { document.getElementById('btnSubmitAbsence').disabled = false; document.getElementById('loadingMsgAbsence').style.display = 'none'; });
         });
     </script>
