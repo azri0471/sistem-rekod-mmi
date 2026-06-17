@@ -243,9 +243,25 @@
         // MASUKKAN LINK WEB APP URL KAU DI SINI
         const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxZtfHwHiDluNCKyfYFbaG2kcJY2Xi831XxQ4OwoSNlB9HXePEj6xOjKAE3TG_jAHgy/exec"; 
 
-        // ----- DATA DROPDOWN (KAU BOLEH EDIT/TAMBAH NAMA KELAS & SUBJEK KAT SINI) -----
-        const SENARAI_KELAS = ["1 MAHIR", "1 SYUMUL", "4 MAHIR", "PERALIHAN", "Lain-lain..."];
-        const SENARAI_SUBJEK = ["Asas Sains Komputer", "Sains Komputer", "Bahasa Melayu", "Bahasa Inggeris", "Matematik", "Sains", "Sejarah", "Pendidikan Islam", "Lain-lain..."];
+        // ----- DATA DROPDOWN 32 KELAS & 24 SUBJEK -----
+        const SENARAI_KELAS = [
+            "PERALIHAN", "1 SYUMUL", "1 MAHIR", "1 KREATIF", "1 ARIF", "1 PRIHATIN",
+            "2 SYUMUL", "2 MAHIR", "2 KREATIF", "2 ARIF", "2 PRIHATIN",
+            "3 SYUMUL", "3 MAHIR", "3 KREATIF", "3 ARIF", "3 PRIHATIN",
+            "4 SYUMUL", "4 MAHIR", "4 KREATIF", "4 ARIF", "4 PRIHATIN",
+            "5 SYUMUL", "5 MAHIR", "5 KREATIF", "5 ARIF", "5 PRIHATIN", "5 POSITIF",
+            "1 KR AM DAHLIA (PPKI)", "2 KR KA LAVENDAR (PPKI)", "3 KR APP ROS (PPKI)", 
+            "3 KS AR CEMPAKA (PPKI)", "4 KS AR ORKID (PPKI)"
+        ];
+        
+        const SENARAI_SUBJEK = [
+            "BAHASA MELAYU", "BAHASA INGGERIS", "MATEMATIK", "SAINS", "PENDIDIKAN ISLAM",
+            "PENDIDIKAN MORAL", "SEJARAH", "PJPK", "GEOGRAFI", "ASAS SAINS KOMPUTER",
+            "REKA BENTUK TEKNOLOGI", "PENDIDIKAN SENI VISUAL", "BIOLOGI", "FIZIK",
+            "KIMIA", "MATEMATIK TAMBAHAN", "SAINS SUKAN", "SAINS KOMPUTER", 
+            "PRINSIP PERAKAUNAN", "EKONOMI", "TASAWWUR ISLAM", "PERNIAGAAN", 
+            "BAHASA CINA", "BAHASA TAMIL"
+        ];
         // -----------------------------------------------------------------------------
 
         let globalAbsenceRows = []; 
@@ -486,7 +502,7 @@
         // --- RUANGAN TUGASAN DROPDOWN ---
         let taskCount = 0;
 
-        function getOptionsHTML(arr, isPeriod = false) {
+        function getOptionsHTML(arr) {
             let html = '<option value="">Sila Pilih...</option>';
             arr.forEach(item => { html += `<option value="${item}">${item}</option>`; });
             return html;
@@ -495,9 +511,6 @@
         function addPeriod() {
             taskCount++;
             
-            // Senarai Nombor Waktu (1 hingga 12)
-            const SENARAI_WAKTU = Array.from({length: 12}, (_, i) => i + 1);
-
             const div = document.createElement('div'); div.className = 'task-block'; div.id = `task-${taskCount}`;
             div.innerHTML = `
                 <div style="font-size: 0.8rem; font-weight: 700; color: var(--primary); margin-bottom: 15px;">TUGASAN KELAS ${taskCount}</div>
@@ -509,7 +522,7 @@
                     </div>
                     <div class="col form-group">
                         <label>Waktu Ke-</label>
-                        <select class="task-waktu" required>${getOptionsHTML(SENARAI_WAKTU)}</select>
+                        <input type="text" class="task-waktu" required placeholder="Cth: 2-4 atau 5,6">
                     </div>
                 </div>
                 <div class="form-group">
@@ -582,14 +595,18 @@
             fetch(WEB_APP_URL, { method: 'POST', redirect: "follow", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload) })
             .then(res => res.json())
             .then(data => {
-                alert("Maklumat cuti dan fail tugasan berjaya dihantar!"); 
-                document.getElementById('absenceForm').reset();
-                document.getElementById('tasksContainer').innerHTML = ''; taskCount = 0; addPeriod();
-                
-                let today = new Date();
-                document.getElementById('tarikh').value = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+                if (data.status === "success") {
+                    alert("Maklumat cuti dan fail tugasan berjaya dihantar!"); 
+                    document.getElementById('absenceForm').reset();
+                    document.getElementById('tasksContainer').innerHTML = ''; taskCount = 0; addPeriod();
+                    
+                    let today = new Date();
+                    document.getElementById('tarikh').value = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
 
-                loadDataFromSheets(); navigateTo('dashboard', document.querySelectorAll('.nav-item')[0]);
+                    loadDataFromSheets(); navigateTo('dashboard', document.querySelectorAll('.nav-item')[0]);
+                } else {
+                    alert("Ralat server: " + data.message);
+                }
             })
             .catch(err => alert("Ralat semasa menghantar. Sila cuba lagi."))
             .finally(() => { document.getElementById('btnSubmitAbsence').disabled = false; document.getElementById('loadingMsgAbsence').style.display = 'none'; });
